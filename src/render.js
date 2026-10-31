@@ -7,7 +7,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const HTML = 'file://' + path.resolve(__dirname, 'animasi.html') + '?capture=1';
+const HTML = 'file://' + path.resolve(__dirname, 'animasi.html') + '?capture=1' + (process.env.SKALA ? '&k=' + process.env.SKALA : '');
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
@@ -34,7 +34,7 @@ async function chunk(browser, f0, f1, fps, out) {
   const done = new Promise((res, rej) => ff.on('close', c => c === 0 ? res() : rej(new Error('ffmpeg ' + c))));
   for (let f = f0; f < f1; f++) {
     await page.evaluate(t => window.render(t), f / fps);
-    const buf = await page.screenshot({ type: 'png' });
+    const buf = await page.screenshot({ type: 'jpeg', quality: 95 });
     if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
     if ((f - f0) % 300 === 0) console.log(`[${out}] ${f - f0}/${f1 - f0}`);
   }

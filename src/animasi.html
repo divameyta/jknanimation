@@ -828,19 +828,21 @@ const SCENES = [
   { d: 30, f: sTips, k: 'Tips' },
   { d: 10, f: sClose, k: 'Penutup' },
 ];
-let acc = 0; for (const s of SCENES) { s.a = acc; acc += s.d; }
+/* faktor perlambatan per adegan agar sinkron dengan narasi: ?k=1.4,1.7,... */
+const KQ = (new URLSearchParams(location.search).get('k') || '').split(',').map(parseFloat);
+let acc = 0; SCENES.forEach((s, i) => { s.k = KQ[i] > 0 ? KQ[i] : 1; s.dr = s.d * s.k; s.a = acc; acc += s.dr; });
 const TOTAL = acc;
 
 function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
   background(t);
-  const sc = SCENES.find(s => t >= s.a && t < s.a + s.d) || SCENES[SCENES.length - 1];
+  const sc = SCENES.find(s => t >= s.a && t < s.a + s.dr) || SCENES[SCENES.length - 1];
   const lt = t - sc.a;
   const fadeIn = sc === SCENES[0] ? 1 : eo(lt / .5);
-  const fadeOut = sc === SCENES[SCENES.length - 1] ? clamp((sc.d - lt) / 1.2) : eo((sc.d - lt) / .5);
+  const fadeOut = sc === SCENES[SCENES.length - 1] ? clamp((sc.dr - lt) / 1.2) : eo((sc.dr - lt) / .5);
   ctx.save(); ctx.globalAlpha = Math.min(fadeIn, fadeOut);
-  sc.f(lt, sc.d);
+  sc.f(lt / sc.k, sc.d);
   ctx.restore();
   // bilah kemajuan & penanda
   if (sc !== SCENES[0] && sc !== SCENES[SCENES.length - 1]) {
