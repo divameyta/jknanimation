@@ -7,12 +7,13 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const HTML = 'file://' + path.resolve(__dirname, 'animasi.html') + '?capture=1' + (process.env.SKALA ? '&k=' + process.env.SKALA : '');
+const HTML = 'file://' + path.resolve(__dirname, process.env.PAGE || 'animasi.html') + '?capture=1' + (process.env.SKALA ? '&k=' + process.env.SKALA : '');
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   await page.goto(HTML);
   await page.evaluate(() => window.ready);
+  if (process.env.SUBS) await page.evaluate(s => window.setSubs && window.setSubs(s), JSON.parse(fs.readFileSync(process.env.SUBS, 'utf-8')));
   return page;
 }
 
