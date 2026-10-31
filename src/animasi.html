@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Animasi Solusi PBI JKN</title>
+<style>
+  html,body{margin:0;padding:0;background:#0A1A33;overflow:hidden}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+/* =========================================================================
+   Video animasi: Solusi atas Penonaktifan Peserta PBI JK 2026
+   Kelompok 2 - Hukum Telematika Kelas E - FH Universitas Jember
+   Seluruh animasi bersifat deterministik: render(t) menggambar frame pada
+   detik ke-t, sehingga dapat direkam frame demi frame menjadi video.
+   ========================================================================= */
+const W = 1920, H = 1080;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+
+const C = {
+  bg: '#0A1A33', bg2: '#0F2747', card: '#13315A', card2: '#183C6B',
+  line: '#2A4E80', teal: '#1FB58F', tealL: '#7BE8C8', amber: '#F5B544',
+  red: '#EF6461', redD: '#7A2E3A', white: '#F4F7FB', mute: '#A7B8CF',
+  blue: '#5AA6FF', grey: '#5B6B82'
+};
+const F = 'Inter, "DejaVu Sans", sans-serif';
+
+/* ---------- utilitas waktu & easing ---------- */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const eio = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const eo = x => 1 - Math.pow(1 - clamp(x), 3);
+const back = x => { x = clamp(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const pr = (t, a, d) => clamp((t - a) / d);
+/* tampil dari a sampai b dengan fade f */
+const vis = (t, a, b = 1e9, f = .5) => Math.min(eo((t - a) / f), eo((b - t) / f));
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+/* ---------- primitif gambar ---------- */
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function box(x, y, w, h, r, fill, stroke, lw = 3) {
+  rr(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+}
+function txt(s, x, y, o = {}) {
+  ctx.save();
+  ctx.globalAlpha *= (o.a ?? 1);
+  ctx.font = `${o.w ?? 600} ${o.s ?? 36}px ${F}`;
+  ctx.fillStyle = o.c ?? C.white;
+  ctx.textAlign = o.al ?? 'left';
+  ctx.textBaseline = o.bl ?? 'alphabetic';
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+function lines(s, maxW, size, weight) {
+  ctx.font = `${weight} ${size}px ${F}`;
+  const out = [];
+  for (const para of s.split('\n')) {
+    let cur = '';
+    for (const word of para.split(' ')) {
+      const test = cur ? cur + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && cur) { out.push(cur); cur = word; }
+      else cur = test;
+    }
+    out.push(cur);
+  }
+  return out;
+}
+function wrap(s, x, y, maxW, o = {}) {
+  const size = o.s ?? 32, wt = o.w ?? 500, lh = o.lh ?? size * 1.3;
+  const L = lines(s, maxW, size, wt);
+  L.forEach((ln, i) => txt(ln, x, y + i * lh, { ...o, s: size, w: wt }));
+  return L.length * lh;
+}
+function arrow(x1, y1, x2, y2, col, lw = 4, head = 16, a = 1) {
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round';
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const ex = x2 - Math.cos(ang) * head * .8, ey = y2 - Math.sin(ang) * head * .8;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(ex, ey); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - Math.cos(ang - .45) * head, y2 - Math.sin(ang - .45) * head);
+  ctx.lineTo(x2 - Math.cos(ang + .45) * head, y2 - Math.sin(ang + .45) * head);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- ikon ---------- */
+function person(x, y, s, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(x, y - s * .32, s * .22, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y + s * .42, s * .4, Math.PI, 0); ctx.closePath(); ctx.fill();
+}
+function phone(x, y, w, h, screen = '#0B1526') {
+  box(x, y, w, h, w * .14, '#1C2A40', '#43597A', 4);
+  box(x + w * .06, y + w * .1, w * .88, h - w * .2, w * .08, screen);
+  box(x + w * .38, y + w * .035, w * .24, w * .035, 4, '#43597A');
+}
+function bell(x, y, s, col) {
+  ctx.fillStyle = col; ctx.beginPath();
+  ctx.moveTo(x - s * .5, y + s * .3);
+  ctx.quadraticCurveTo(x - s * .38, y + s * .18, x - s * .38, y - s * .1);
+  ctx.quadraticCurveTo(x - s * .38, y - s * .55, x, y - s * .58);
+  ctx.quadraticCurveTo(x + s * .38, y - s * .55, x + s * .38, y - s * .1);
+  ctx.quadraticCurveTo(x + s * .38, y + s * .18, x + s * .5, y + s * .3);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y + s * .42, s * .12, 0, Math.PI * 2); ctx.fill();
+}
+function shield(x, y, s, col, check = true) {
+  ctx.fillStyle = col; ctx.beginPath();
+  ctx.moveTo(x, y - s * .6); ctx.lineTo(x + s * .5, y - s * .42);
+  ctx.quadraticCurveTo(x + s * .52, y + s * .35, x, y + s * .62);
+  ctx.quadraticCurveTo(x - s * .52, y + s * .35, x - s * .5, y - s * .42);
+  ctx.closePath(); ctx.fill();
+  if (check) checkMark(x, y, s * .5, C.bg);
+}
+function checkMark(x, y, s, col, lw) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = lw ?? s * .22; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - s * .45, y); ctx.lineTo(x - s * .1, y + s * .35); ctx.lineTo(x + s * .5, y - s * .35); ctx.stroke();
+  ctx.restore();
+}
+function cross(x, y, s, col, lw) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = lw ?? s * .22; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x - s * .4, y - s * .4); ctx.lineTo(x + s * .4, y + s * .4);
+  ctx.moveTo(x + s * .4, y - s * .4); ctx.lineTo(x - s * .4, y + s * .4); ctx.stroke(); ctx.restore();
+}
+function docIcon(x, y, s, col, lineCol) {
+  const w = s * .78, h = s, f = s * .24;
+  ctx.fillStyle = col; ctx.beginPath();
+  ctx.moveTo(x - w / 2, y - h / 2); ctx.lineTo(x + w / 2 - f, y - h / 2); ctx.lineTo(x + w / 2, y - h / 2 + f);
+  ctx.lineTo(x + w / 2, y + h / 2); ctx.lineTo(x - w / 2, y + h / 2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = lineCol ?? 'rgba(10,26,51,.55)';
+  for (let i = 0; i < 4; i++) ctx.fillRect(x - w * .32, y - h * .18 + i * h * .16, w * (i === 3 ? .4 : .64), h * .06);
+}
+function db(x, y, s, col) {
+  const w = s * .8, h = s * .9, e = s * .14;
+  ctx.fillStyle = col;
+  ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  ctx.beginPath(); ctx.ellipse(x, y + h / 2, w / 2, e, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  ctx.beginPath(); ctx.ellipse(x, y - h / 2, w / 2, e, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(10,26,51,.4)'; ctx.lineWidth = 3;
+  for (const k of [-.1, .2]) { ctx.beginPath(); ctx.ellipse(x, y + h * k, w / 2, e, 0, 0, Math.PI); ctx.stroke(); }
+}
+function ministry(x, y, s, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.moveTo(x - s * .55, y - s * .2); ctx.lineTo(x, y - s * .55); ctx.lineTo(x + s * .55, y - s * .2); ctx.closePath(); ctx.fill();
+  for (let i = 0; i < 4; i++) ctx.fillRect(x - s * .42 + i * s * .26, y - s * .14, s * .12, s * .5);
+  ctx.fillRect(x - s * .55, y + s * .4, s * 1.1, s * .12);
+}
+function hospital(x, y, s, col) {
+  ctx.fillStyle = col; ctx.fillRect(x - s * .45, y - s * .45, s * .9, s * .9);
+  ctx.fillStyle = C.bg; ctx.fillRect(x - s * .08, y - s * .3, s * .16, s * .5); ctx.fillRect(x - s * .25, y - s * .13, s * .5, s * .16);
+  ctx.fillRect(x - s * .12, y + s * .25, s * .24, s * .2);
+}
+function envelope(x, y, s, col, ic = C.bg) {
+  const w = s, h = s * .68;
+  box(x - w / 2, y - h / 2, w, h, s * .06, col);
+  ctx.strokeStyle = ic; ctx.lineWidth = s * .07; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - w / 2 + s * .06, y - h / 2 + s * .08); ctx.lineTo(x, y + s * .06); ctx.lineTo(x + w / 2 - s * .06, y - h / 2 + s * .08); ctx.stroke();
+}
+function bubble(x, y, s, col, ic = C.bg) {
+  box(x - s * .5, y - s * .38, s, s * .66, s * .16, col);
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - s * .25, y + s * .26); ctx.lineTo(x - s * .32, y + s * .48); ctx.lineTo(x - s * .05, y + s * .27); ctx.fill();
+  ctx.fillStyle = ic; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.arc(x + i * s * .22, y - s * .05, s * .07, 0, Math.PI * 2); ctx.fill(); }
+}
+function village(x, y, s, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.moveTo(x - s * .55, y - s * .05); ctx.lineTo(x, y - s * .5); ctx.lineTo(x + s * .55, y - s * .05); ctx.closePath(); ctx.fill();
+  ctx.fillRect(x - s * .4, y - s * .05, s * .8, s * .5);
+  ctx.fillStyle = C.bg; ctx.fillRect(x - s * .1, y + s * .15, s * .2, s * .3);
+}
+function magnifier(x, y, s, col) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = s * .13; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(x - s * .1, y - s * .1, s * .3, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + s * .12, y + s * .12); ctx.lineTo(x + s * .42, y + s * .42); ctx.stroke(); ctx.restore();
+}
+function warn(x, y, s, col) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y - s * .5); ctx.lineTo(x + s * .55, y + s * .45); ctx.lineTo(x - s * .55, y + s * .45); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = C.bg; ctx.fillRect(x - s * .05, y - s * .18, s * .1, s * .36); ctx.beginPath(); ctx.arc(x, y + s * .3, s * .06, 0, Math.PI * 2); ctx.fill();
+}
+function camera(x, y, s, col) {
+  box(x - s * .5, y - s * .3, s, s * .65, s * .1, col);
+  ctx.fillStyle = col; ctx.fillRect(x - s * .18, y - s * .42, s * .36, s * .15);
+  ctx.fillStyle = C.bg; ctx.beginPath(); ctx.arc(x, y + s * .03, s * .2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y + s * .03, s * .1, 0, Math.PI * 2); ctx.fill();
+}
+function lock(x, y, s, col) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = s * .12;
+  ctx.beginPath(); ctx.arc(x, y - s * .12, s * .24, Math.PI, 0); ctx.stroke(); ctx.restore();
+  box(x - s * .38, y - s * .12, s * .76, s * .55, s * .08, col);
+  ctx.fillStyle = C.bg; ctx.beginPath(); ctx.arc(x, y + s * .12, s * .08, 0, Math.PI * 2); ctx.fill();
+}
+function refresh(x, y, s, col) {
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = s * .12; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(x, y, s * .34, -Math.PI * .1, Math.PI * 1.45); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = col; const ax = x + s * .34 * Math.cos(-Math.PI * .1), ay = y + s * .34 * Math.sin(-Math.PI * .1);
+  ctx.beginPath(); ctx.moveTo(ax - s * .17, ay - s * .02); ctx.lineTo(ax + s * .17, ay - s * .02); ctx.lineTo(ax, ay + s * .2); ctx.closePath(); ctx.fill();
+}
+
+/* ---------- komponen ---------- */
+function badge(x, y, label, col, a = 1) {
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.font = `800 24px ${F}`;
+  const w = ctx.measureText(label).width + 44;
+  box(x, y, w, 44, 22, col);
+  txt(label, x + w / 2, y + 31, { s: 24, w: 800, c: C.bg, al: 'center' });
+  ctx.restore();
+  return w;
+}
+function header(lt, tag, tagCol, title, sub) {
+  const a = vis(lt, .1, 1e9, .6), dy = (1 - eo(pr(lt, .1, .8))) * 30;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(0, dy);
+  if (tag) badge(110, 70, tag, tagCol);
+  const hh = wrap(title, 110, tag ? 172 : 140, 1700, { s: 50, w: 800, lh: 60 });
+  if (sub) txt(sub, 110, (tag ? 172 : 140) + hh + 2, { s: 28, w: 500, c: C.mute });
+  ctx.restore();
+}
+function chip(x, y, w, h, title, desc, col, a) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(0, (1 - a) * 20);
+  box(x, y, w, h, 18, C.card, null);
+  box(x, y, 10, h, 5, col);
+  txt(title, x + 32, y + 42, { s: 25, w: 800, c: col });
+  wrap(desc, x + 32, y + 78, w - 56, { s: 22, w: 500, c: C.white, lh: 29 });
+  ctx.restore();
+}
+function legalLabel(x, y, a) {
+  txt('DASAR HUKUM', x, y, { s: 22, w: 800, c: C.mute, a });
+}
+
+/* ---------- latar ---------- */
+function background(t) {
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#0B1D3A'); g.addColorStop(1, '#081428');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // titik-titik grid yang bergerak pelan (melambangkan data)
+  ctx.fillStyle = 'rgba(123,232,200,0.07)';
+  const off = (t * 12) % 60;
+  for (let x = -60; x < W + 60; x += 60) for (let y = -60; y < H + 60; y += 60) {
+    ctx.beginPath(); ctx.arc(x + off, y + off * .5, 2, 0, Math.PI * 2); ctx.fill();
+  }
+  const rg = ctx.createRadialGradient(W * .8, H * .1, 50, W * .8, H * .1, 900);
+  rg.addColorStop(0, 'rgba(31,181,143,0.10)'); rg.addColorStop(1, 'rgba(31,181,143,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+}
+
+/* =========================================================================
+   ADEGAN
+   ========================================================================= */
+
+/* 0. Judul */
+function sTitle(lt, D) {
+  // ponsel dengan lonceng notifikasi
+  const pa = eo(pr(lt, .2, 1));
+  ctx.save(); ctx.globalAlpha *= pa; ctx.translate(0, (1 - pa) * 40);
+  phone(220, 250, 330, 620);
+  const ring = Math.sin(lt * 9) * .25 * clamp(1 - pr(lt, 3.5, 1)) * (lt > 1.4 ? 1 : 0);
+  ctx.save(); ctx.translate(385, 470); ctx.rotate(ring);
+  bell(0, 0, 120, C.amber); ctx.restore();
+  const n = eo(pr(lt, 1.6, .6));
+  ctx.save(); ctx.globalAlpha *= n;
+  ctx.beginPath(); ctx.arc(445, 415, 28, 0, Math.PI * 2); ctx.fillStyle = C.red; ctx.fill();
+  txt('1', 445, 426, { s: 32, w: 800, al: 'center' });
+  ctx.restore();
+  box(260, 620, 250, 90, 16, C.card2);
+  txt('Pemberitahuan', 280, 655, { s: 22, w: 700, c: C.tealL });
+  txt('Status kepesertaan', 280, 690, { s: 20, w: 500, c: C.mute });
+  ctx.restore();
+
+  const x = 680;
+  txt('MEDIA PRESENTASI · HUKUM TELEMATIKA', x, 330, { s: 26, w: 800, c: C.teal, a: vis(lt, .6, D - .4) });
+  const t1 = eo(pr(lt, 1.0, .9));
+  txt('Dari Pasif', x, 440 + (1 - t1) * 40, { s: 96, w: 800, a: t1 });
+  const t2 = eo(pr(lt, 1.4, .9));
+  txt('Menjadi Proaktif', x, 545 + (1 - t2) * 40, { s: 96, w: 800, c: C.tealL, a: t2 });
+  const t3 = eo(pr(lt, 2.4, .9));
+  wrap('Solusi atas penonaktifan peserta PBI Jaminan Kesehatan 2026 dan peran Mobile JKN sebagai layanan publik digital',
+    x, 625, 1100, { s: 34, w: 500, c: C.mute, a: t3, lh: 46 });
+  const t4 = eo(pr(lt, 3.6, .8));
+  ctx.save(); ctx.globalAlpha *= t4;
+  ctx.fillStyle = C.teal; ctx.fillRect(x, 780, 80, 6);
+  txt('Kelompok 2 · Hukum Telematika Kelas E', x, 840, { s: 30, w: 700 });
+  txt('Fakultas Hukum Universitas Jember · 2026', x, 885, { s: 26, w: 500, c: C.mute });
+  ctx.restore();
+}
+
+/* 1. Konteks singkat masalah */
+function sProblem(lt, D) {
+  header(lt, 'LATAR MASALAH', C.red, 'Apa yang terjadi pada Februari 2026?');
+
+  // fase A: grid peserta yang dinonaktifkan
+  const aA = vis(lt, .4, 8.3, .6);
+  if (aA > 0) {
+    ctx.save(); ctx.globalAlpha *= aA;
+    const cols = 22, rows = 9, sp = 38, x0 = 140, y0 = 330;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const i = r * cols + c, off = hash(i) < .14;
+      const th = 1.6 + (c + r * .6) * .09;
+      const k = off ? eo(pr(lt, th, .4)) : 0;
+      const col = off ? (k > .5 ? C.red : C.teal) : C.teal;
+      ctx.globalAlpha = aA * (off ? 1 : .55);
+      person(x0 + c * sp, y0 + r * sp * 1.15, 30, col);
+    }
+    ctx.globalAlpha = aA;
+    const cnt = Math.round(11000000 * eio(pr(lt, 1.6, 2.6)));
+    txt('±' + cnt.toLocaleString('id-ID'), 1040, 440, { s: 104, w: 800, c: C.red });
+    txt('peserta PBI JK dihapus per 1 Februari 2026', 1040, 500, { s: 34, w: 600 });
+    txt('Kepmensos Nomor 3/HUK/2026', 1040, 545, { s: 28, w: 500, c: C.mute });
+    const b = eo(pr(lt, 4.4, .7));
+    ctx.globalAlpha = aA * b;
+    box(1040, 600, 760, 180, 20, 'rgba(239,100,97,.14)', C.red, 2);
+    txt('12.262 pasien cuci darah', 1075, 660, { s: 40, w: 800, c: C.red });
+    txt('ikut dinonaktifkan, tanpa pemberitahuan', 1075, 708, { s: 28, w: 500 });
+    txt('dan tanpa masa tenggang', 1075, 744, { s: 28, w: 500 });
+    ctx.restore();
+  }
+
+  // fase B: paradoks digital
+  const aB = vis(lt, 8.6, 16.3, .6);
+  if (aB > 0) {
+    ctx.save(); ctx.globalAlpha *= aB;
+    phone(220, 290, 290, 560);
+    box(250, 380, 230, 70, 14, C.card2);
+    txt('Mobile JKN', 270, 425, { s: 26, w: 800, c: C.tealL });
+    txt('Status Kepesertaan', 365, 520, { s: 22, w: 600, c: C.mute, al: 'center' });
+    const blink = .65 + .35 * Math.sin(lt * 5);
+    box(260, 545, 210, 70, 14, `rgba(239,100,97,${.25 * blink})`, C.red, 3);
+    txt('NONAKTIF', 365, 592, { s: 32, w: 800, c: C.red, al: 'center' });
+    // tangan "menarik" informasi (pull)
+    const pull = (lt * .8) % 1;
+    arrow(365, 790 - pull * 40, 365, 680 - pull * 40, C.amber, 6, 22, 1 - pull);
+    txt('PULL', 365, 810, { s: 26, w: 800, c: C.amber, al: 'center' });
+
+    txt('Paradoks digital', 640, 380, { s: 30, w: 800, c: C.amber });
+    wrap('Aplikasi punya ±64 juta pengguna aktif, tetapi bekerja pasif: status baru terlihat jika peserta mengeceknya sendiri.',
+      640, 440, 640, { s: 34, w: 600, lh: 46 });
+    const h2 = eo(pr(lt, 11, .7));
+    ctx.globalAlpha = aB * h2;
+    hospital(1500, 470, 150, C.mute);
+    cross(1590, 400, 70, C.red, 14);
+    wrap('Banyak peserta baru tahu statusnya ketika sudah di rumah sakit.', 1340, 650, 470, { s: 32, w: 700, c: C.red, lh: 42 });
+    ctx.restore();
+  }
+
+  // fase C: kutipan inti
+  const aC = vis(lt, 16.6, D, .7);
+  if (aC > 0) {
+    ctx.save(); ctx.globalAlpha *= aC;
+    txt('“', 960, 470, { s: 220, w: 800, c: C.teal, al: 'center', a: .5 });
+    txt('Semua lembaga mengetahui perubahan data,', 960, 520, { s: 54, w: 800, al: 'center' });
+    txt('kecuali orang yang datanya diubah.', 960, 590, { s: 54, w: 800, al: 'center', c: C.amber });
+    const k = eo(pr(lt, 18.2, .8));
+    ctx.globalAlpha = aC * k;
+    txt('Akar masalah: tidak ada perlindungan hukum preventif bagi warga', 960, 690, { s: 32, w: 500, c: C.mute, al: 'center' });
+    txt('(Philipus M. Hadjon)', 960, 735, { s: 26, w: 500, c: C.mute, al: 'center' });
+    ctx.restore();
+  }
+}
+
+/* 2. Peta: akar masalah -> solusi */
+function sMap(lt, D) {
+  header(lt, 'PETA SOLUSI', C.teal, 'Tiga akar masalah, tiga solusi', 'Solusi difokuskan pada pemerintah dan BPJS Kesehatan, ditambah tips praktis bagi masyarakat');
+  const rows = [
+    ['Tidak ada pemberitahuan langsung', 'Permensos 3/2026 tidak merinci kapan & lewat kanal apa', 'Notifikasi proaktif H-30', 'Push Mobile JKN, SMS, dan surat lewat desa/kelurahan'],
+    ['Tidak ada penilaian risiko', 'Pasien katastropik ikut terhapus', 'DPIA + pengecualian otomatis', 'Pasien yang sedang dirawat tetap aktif'],
+    ['Data antarlembaga tidak terhubung', 'Data mengalir satu arah, tanpa verifikasi silang', 'Interoperabilitas data', 'Kemensos, Kemenkes, BPS, BPJS + lembaga PDP'],
+  ];
+  rows.forEach((r, i) => {
+    const y = 330 + i * 190, s = 1.0 + i * 2.2;
+    const a1 = eo(pr(lt, s, .6)), a2 = eo(pr(lt, s + .9, .6)), ar = eo(pr(lt, s + .5, .6));
+    ctx.save(); ctx.globalAlpha *= a1; ctx.translate((1 - a1) * -40, 0);
+    box(110, y, 700, 150, 22, 'rgba(239,100,97,.12)', C.red, 2);
+    warn(175, y + 75, 56, C.red);
+    txt(r[0], 230, y + 65, { s: 32, w: 800 });
+    wrap(r[1], 230, y + 105, 550, { s: 23, w: 500, c: C.mute, lh: 30 });
+    ctx.restore();
+    if (ar > 0) arrow(840, y + 75, 840 + 200 * ar, y + 75, C.amber, 6, 22, ar);
+    ctx.save(); ctx.globalAlpha *= a2; ctx.translate((1 - a2) * 40, 0);
+    box(1080, y, 730, 150, 22, 'rgba(31,181,143,.14)', C.teal, 3);
+    ctx.beginPath(); ctx.arc(1150, y + 75, 36, 0, Math.PI * 2); ctx.fillStyle = C.teal; ctx.fill();
+    txt(String(i + 1), 1150, y + 88, { s: 36, w: 800, c: C.bg, al: 'center' });
+    txt(r[2], 1210, y + 65, { s: 34, w: 800, c: C.tealL });
+    wrap(r[3], 1210, y + 105, 570, { s: 23, w: 500, lh: 30 });
+    ctx.restore();
+  });
+  const a = eo(pr(lt, 8.4, .7));
+  txt('+  Tips praktis agar masyarakat tidak menjadi korban', 1080, 925, { s: 28, w: 700, c: C.amber, a });
+}
+
+/* 3a. Solusi 1: linimasa H-30 */
+function sSol1a(lt, D) {
+  header(lt, 'SOLUSI 1', C.teal, 'Wajibkan pemberitahuan langsung paling lambat 30 hari sebelum penonaktifan', 'Revisi Permensos 3/2026, sebagaimana dituntut KPCDI');
+
+  const x0 = 200, x1 = 1720, y = 720;
+  const la = eo(pr(lt, 1, .8));
+  ctx.save(); ctx.globalAlpha *= la;
+  box(x0, y - 8, x1 - x0, 16, 8, C.line);
+  const prog = eio(pr(lt, 2.5, 9));
+  box(x0, y - 8, (x1 - x0) * prog, 16, 8, C.teal);
+  const marks = [
+    [0, 'H-30', 'Notifikasi dikirim', 'langsung ke peserta'],
+    [.5, 'H-29 s.d. H-1', 'Masa sanggah', 'perbaiki data / ajukan keberatan'],
+    [1, 'H-0', 'Keputusan final', 'disampaikan secara resmi'],
+  ];
+  marks.forEach(([p, lab, t1, t2], i) => {
+    const mx = lerp(x0, x1, p), on = prog >= p - .001;
+    const ma = eo(pr(lt, 1.6 + i * .5, .5));
+    ctx.save(); ctx.globalAlpha *= ma;
+    ctx.beginPath(); ctx.arc(mx, y, 26, 0, Math.PI * 2); ctx.fillStyle = on ? C.teal : C.card2; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = on ? C.tealL : C.line; ctx.stroke();
+    if (on) checkMark(mx, y, 26, C.bg, 6);
+    const al = p === 0 ? 'left' : p === 1 ? 'right' : 'center';
+    const tx = p === 0 ? mx - 26 : p === 1 ? mx + 26 : mx;
+    txt(lab, tx, y + 75, { s: 30, w: 800, c: on ? C.tealL : C.mute, al });
+    txt(t1, tx, y + 118, { s: 28, w: 700, al });
+    txt(t2, tx, y + 154, { s: 24, w: 500, c: C.mute, al });
+    ctx.restore();
+  });
+  // titik berjalan
+  const dx = lerp(x0, x1, prog);
+  if (prog < .98) { ctx.beginPath(); ctx.arc(dx, y, 12, 0, Math.PI * 2); ctx.fillStyle = C.white; ctx.fill(); }
+  ctx.restore();
+
+  // ponsel menerima notifikasi push
+  const pa = eo(pr(lt, 2.6, .7));
+  ctx.save(); ctx.globalAlpha *= pa;
+  const px = 200, py = 330;
+  box(px, py, 760, 250, 26, C.card, null);
+  bell(px + 80, py + 95, 70, C.amber);
+  txt('Mobile JKN · notifikasi', px + 140, py + 70, { s: 24, w: 700, c: C.tealL });
+  txt('Status PBI Anda akan berubah', px + 140, py + 115, { s: 32, w: 800 });
+  txt('dalam 30 hari.', px + 140, py + 155, { s: 32, w: 800 });
+  txt('Ajukan perbaikan data sebelum tanggal tersebut.', px + 140, py + 200, { s: 24, w: 500, c: C.mute });
+  ctx.restore();
+
+  // pull -> push
+  const sa = eo(pr(lt, 5.5, .8));
+  ctx.save(); ctx.globalAlpha *= sa;
+  const sx = 1060, sy = 360;
+  txt('Mengubah cara kerja Mobile JKN', sx, sy, { s: 26, w: 700, c: C.mute });
+  const sw = eio(pr(lt, 7, 1));
+  box(sx, sy + 40, 640, 120, 60, C.card2);
+  box(sx + 8 + sw * 312, sy + 48, 312, 104, 52, lerp(0, 1, sw) > .5 ? C.teal : C.amber);
+  txt('PULL', sx + 164, sy + 116, { s: 34, w: 800, c: sw < .5 ? C.bg : C.mute, al: 'center' });
+  txt('PUSH', sx + 476, sy + 116, { s: 34, w: 800, c: sw > .5 ? C.bg : C.mute, al: 'center' });
+  txt(sw < .5 ? 'warga harus mengecek sendiri' : 'negara yang memberi tahu warga', sx + 320, sy + 210, { s: 28, w: 600, c: sw < .5 ? C.amber : C.tealL, al: 'center' });
+  ctx.restore();
+}
+
+/* 3b. Solusi 1: multikanal + dasar hukum */
+function sSol1b(lt, D) {
+  header(lt, 'SOLUSI 1', C.teal, 'Satu pemberitahuan, banyak kanal', 'Agar pesan benar-benar sampai, termasuk kepada warga tanpa ponsel pintar');
+
+  const cx = 330, cy = 520;
+  const da = eo(pr(lt, .6, .6));
+  ctx.save(); ctx.globalAlpha *= da;
+  ctx.beginPath(); ctx.arc(cx, cy, 110, 0, Math.PI * 2); ctx.fillStyle = C.card2; ctx.fill();
+  docIcon(cx, cy - 10, 110, C.white);
+  txt('Pemberitahuan', cx, cy + 150, { s: 28, w: 800, al: 'center' });
+  txt('penonaktifan', cx, cy + 186, { s: 24, w: 500, c: C.mute, al: 'center' });
+  ctx.restore();
+
+  const ch = [
+    ['Push notification Mobile JKN', 'bagi pengguna aplikasi', (x, y) => bell(x, y, 44, C.bg)],
+    ['SMS ke nomor terdaftar', 'bagi pemilik ponsel biasa', (x, y) => bubble(x, y, 44, C.bg, C.tealL)],
+    ['Surat lewat desa/kelurahan', 'bagi warga tanpa akses digital', (x, y) => envelope(x, y, 42, C.bg, C.tealL)],
+  ];
+  ch.forEach((c, i) => {
+    const y = 330 + i * 140, s = 1.2 + i * .7;
+    const a = eo(pr(lt, s, .6));
+    if (a <= 0) return;
+    const pulse = ((lt - s) * .7) % 1;
+    arrow(cx + 120, cy, lerp(cx + 120, 600, a), lerp(cy, y + 50, a), C.teal, 5, 18, a);
+    ctx.save(); ctx.globalAlpha *= a * (1 - pulse);
+    ctx.beginPath(); ctx.arc(lerp(cx + 120, 600, pulse), lerp(cy, y + 50, pulse), 8, 0, Math.PI * 2); ctx.fillStyle = C.tealL; ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha *= a;
+    box(620, y, 600, 100, 20, C.card, C.teal, 2);
+    ctx.beginPath(); ctx.arc(680, y + 50, 36, 0, Math.PI * 2); ctx.fillStyle = C.tealL; ctx.fill();
+    c[2](680, y + 52);
+    txt(c[0], 735, y + 45, { s: 28, w: 800 });
+    txt(c[1], 735, y + 80, { s: 22, w: 500, c: C.mute });
+    ctx.restore();
+  });
+
+  // statistik kesenjangan digital
+  const sa = eo(pr(lt, 4, .7));
+  ctx.save(); ctx.globalAlpha *= sa;
+  const bx = 1300, by = 330;
+  txt('Mengapa harus banyak kanal?', bx, by + 30, { s: 28, w: 800, c: C.amber });
+  txt('Pengguna aktif Mobile JKN', bx, by + 90, { s: 24, w: 500, c: C.mute });
+  box(bx, by + 110, 500, 44, 22, C.card2);
+  const fill = .226 * eo(pr(lt, 4.6, 1.5));
+  box(bx, by + 110, Math.max(44, 500 * fill), 44, 22, C.teal);
+  txt((fill * 100).toFixed(1).replace('.', ',') + '%', bx + 500 * fill + 18, by + 143, { s: 28, w: 800 });
+  wrap('±64 juta dari 282,7 juta peserta JKN. Peserta PBI justru kelompok yang paling kecil kemungkinannya punya ponsel pintar, kuota, dan literasi digital.',
+    bx, by + 210, 500, { s: 23, w: 500, lh: 31 });
+  ctx.restore();
+
+  // dasar hukum
+  const la = eo(pr(lt, 8, .6));
+  legalLabel(110, 822, la);
+  const chips = [
+    ['Pasal 61 ayat (1) UU 30/2014', 'Keputusan wajib disampaikan kepada pihak yang disebut di dalamnya'],
+    ['Pasal 7 ayat (2) huruf f UU AP', 'Warga berhak didengar sebelum keputusan dibuat'],
+    ['Pasal 5 & 6 UU 27/2022 (PDP)', 'Hak atas informasi dan hak memperbaiki data'],
+    ['Pasal 10 UU 14/2008 (KIP)', 'Informasi yang mengancam hajat hidup wajib diumumkan serta-merta'],
+  ];
+  chips.forEach((c, i) => chip(110 + i * 430, 845, 410, 165, c[0], c[1], C.tealL, eo(pr(lt, 8.4 + i * .8, .6))));
+}
+
+/* 4. Solusi 2: DPIA + pengecualian otomatis */
+const ILL = ['Cuci darah', 'Kemoterapi', 'Penyakit jantung', 'Thalassemia'];
+function sSol2(lt, D) {
+  header(lt, 'SOLUSI 2', C.teal, 'Lakukan DPIA sebelum pemutakhiran data massal dan kecualikan otomatis pasien katastropik', null);
+
+  // fase A: aliran data melewati filter DPIA
+  const aA = vis(lt, .8, 18.5, .7);
+  if (aA > 0) {
+    ctx.save(); ctx.globalAlpha *= aA;
+    const bx = 790, bw = 380, by = 400, bh = 320, rowY = 560;
+    const zTop = { x: 1490, y: 300, w: 340, h: 180 }, zBot = { x: 1490, y: 650, w: 340, h: 180 };
+    let nTop = 0, nBot = 0;
+    const N = 16, T = 6.2;
+    for (let k = 0; k < N; k++) {
+      const s = 1.4 + k * 1.15, p = (lt - s) / T;
+      if (p < 0) continue;
+      const kat = hash(k + 7) < .3;
+      if (p >= 1) { kat ? nTop++ : nBot++; continue; }
+      let x, y, inBox = false;
+      if (p < .45) { x = lerp(240, bx + 20, p / .45); y = rowY; }
+      else if (p < .55) { x = bx + 20 + (bw - 40) * (p - .45) / .1; y = rowY; inBox = true; }
+      else { const q = eio((p - .55) / .45); x = lerp(bx + bw - 20, 1370, q); y = lerp(rowY, kat ? zTop.y + 90 : zBot.y + 90, q); }
+      if (inBox) continue;
+      const after = p >= .55;
+      const a = clamp((1 - p) / .1);
+      ctx.save(); ctx.globalAlpha *= a;
+      const col = after ? (kat ? C.teal : C.card2) : C.card2;
+      box(x - 110, y - 30, 220, 60, 14, col, after && kat ? C.tealL : C.line, 2);
+      person(x - 78, y + 2, 34, after && kat ? C.bg : C.mute);
+      txt(after && kat ? ILL[k % 4] : 'Peserta ' + String(1000 + k * 37).padStart(4, '0'), x - 50, y + 9,
+        { s: 21, w: 700, c: after && kat ? C.bg : C.white });
+      ctx.restore();
+    }
+    // sumber data
+    box(90, 470, 190, 180, 20, C.card, C.line, 2);
+    db(185, 545, 80, C.blue);
+    txt('DTSEN', 185, 625, { s: 24, w: 800, al: 'center' });
+    txt('Daftar perubahan data', 185, 690, { s: 22, w: 500, c: C.mute, al: 'center' });
+    // kotak DPIA
+    const glow = .5 + .5 * Math.sin(lt * 4);
+    box(bx, by, bw, bh, 28, '#102B50', C.amber, 4);
+    ctx.save(); ctx.globalAlpha *= .15 + .15 * glow; box(bx - 8, by - 8, bw + 16, bh + 16, 34, null, C.amber, 6); ctx.restore();
+    magnifier(bx + bw / 2, by + 100, 100, C.amber);
+    txt('DPIA', bx + bw / 2, by + 210, { s: 46, w: 800, c: C.amber, al: 'center' });
+    txt('penilaian dampak +', bx + bw / 2, by + 250, { s: 22, w: 500, c: C.mute, al: 'center' });
+    txt('cek riwayat klaim BPJS', bx + bw / 2, by + 280, { s: 22, w: 500, c: C.mute, al: 'center' });
+    // zona hasil
+    box(zTop.x, zTop.y, zTop.w, zTop.h, 22, 'rgba(31,181,143,.16)', C.teal, 3);
+    shield(zTop.x + 60, zTop.y + 70, 70, C.teal);
+    txt('TETAP AKTIF', zTop.x + 110, zTop.y + 65, { s: 30, w: 800, c: C.tealL });
+    txt('dilindungi otomatis', zTop.x + 110, zTop.y + 100, { s: 22, w: 500 });
+    txt(nTop + ' pasien', zTop.x + 110, zTop.y + 150, { s: 26, w: 800, c: C.tealL });
+    box(zBot.x, zBot.y, zBot.w, zBot.h, 22, C.card, C.line, 2);
+    bell(zBot.x + 60, zBot.y + 75, 60, C.amber);
+    txt('Verifikasi lanjut', zBot.x + 110, zBot.y + 65, { s: 28, w: 800 });
+    txt('+ notifikasi H-30', zBot.x + 110, zBot.y + 100, { s: 22, w: 500, c: C.amber });
+    txt(nBot + ' peserta', zBot.x + 110, zBot.y + 150, { s: 26, w: 800, c: C.mute });
+    ctx.restore();
+  }
+
+  // fase B: perbandingan & dasar hukum
+  const aB = vis(lt, 18.8, D, .7);
+  if (aB > 0) {
+    ctx.save(); ctx.globalAlpha *= aB;
+    const y = 300;
+    box(110, y, 820, 250, 24, 'rgba(239,100,97,.12)', C.red, 2);
+    txt('TANPA DPIA (Februari 2026)', 150, y + 55, { s: 26, w: 800, c: C.red });
+    wrap('12.262 pasien cuci darah ikut dinonaktifkan; lebih dari 100 ribu penderita katastropik harus diaktifkan kembali setelah keputusan berlaku.',
+      150, y + 105, 740, { s: 28, w: 600, lh: 38 });
+    const b = eo(pr(lt, 20.3, .7));
+    ctx.globalAlpha = aB * b;
+    box(990, y, 820, 250, 24, 'rgba(31,181,143,.14)', C.teal, 3);
+    txt('DENGAN DPIA', 1030, y + 55, { s: 26, w: 800, c: C.tealL });
+    wrap('Risiko bagi pasien terdeteksi sebelum keputusan dibuat, sehingga pengecualian dapat dirancang sejak awal, bukan setelah ada korban.',
+      1030, y + 105, 740, { s: 28, w: 600, lh: 38 });
+    const c = eo(pr(lt, 22, .7));
+    ctx.globalAlpha = aB * c;
+    box(110, 590, 1700, 100, 50, C.amber);
+    txt('Prinsip: “layani dahulu, verifikasi kemudian”', 960, 655, { s: 38, w: 800, c: C.bg, al: 'center' });
+    ctx.globalAlpha = aB;
+    legalLabel(110, 752, eo(pr(lt, 23.5, .6)));
+    const chips = [
+      ['Pasal 34 UU 27/2022 (PDP)', 'DPIA wajib bila ada keputusan otomatis berakibat hukum atau berdampak signifikan'],
+      ['Pasal 16 ayat (2) & 29 ayat (1) UU PDP', 'Data wajib akurat, lengkap, mutakhir, dan dapat dipertanggungjawabkan'],
+      ['Pasal 4 & 29 UU 25/2009', 'Perlakuan khusus bagi kelompok rentan dalam pelayanan publik'],
+    ];
+    chips.forEach((ch, i) => chip(110 + i * 575, 775, 555, 165, ch[0], ch[1], C.tealL, eo(pr(lt, 24 + i * .9, .6))));
+    ctx.restore();
+  }
+}
+
+/* 5. Solusi 3: interoperabilitas data + lembaga PDP */
+function sSol3(lt, D) {
+  header(lt, 'SOLUSI 3', C.teal, 'Bangun interoperabilitas data antarlembaga dan percepat pembentukan lembaga PDP', null);
+  const nodes = [
+    ['BPS', 'data sosial-ekonomi', (x, y) => db(x, y, 42, C.bg)],
+    ['Kemensos', 'penetapan PBI (DTSEN)', (x, y) => ministry(x, y, 46, C.bg)],
+    ['BPJS Kesehatan', 'riwayat klaim, Mobile JKN', (x, y) => shield(x, y, 48, C.bg, false)],
+    ['Kemenkes', 'data penyakit katastropik', (x, y) => hospital(x, y, 40, C.bg)],
+  ];
+  // posisi "sebelum" (satu baris) dan "sesudah" (mengelilingi hub)
+  const before = [[260, 560], [700, 560], [1140, 560], [1620, 560]].map(([x, y]) => [x, y]);
+  const hub = [960, 600];
+  const after = [[hub[0] - 560, hub[1] - 130], [hub[0] + 560, hub[1] - 130], [hub[0] + 560, hub[1] + 130], [hub[0] - 560, hub[1] + 130]];
+  const m = eio(pr(lt, 10.5, 2));
+  const pos = nodes.map((_, i) => [lerp(before[i][0], after[i][0], m), lerp(before[i][1], after[i][1], m)]);
+  const aN = eo(pr(lt, .8, .7));
+
+  // label fase
+  txt('SEKARANG', 110, 330, { s: 26, w: 800, c: C.red, a: aN * (1 - m) });
+  txt('Data mengalir satu arah, tanpa verifikasi silang', 110, 372, { s: 30, w: 600, a: aN * (1 - m) });
+  txt('USULAN', 110, 330, { s: 26, w: 800, c: C.tealL, a: m });
+  txt('Data saling terhubung dan diverifikasi silang', 110, 372, { s: 30, w: 600, a: m });
+
+  ctx.save(); ctx.globalAlpha *= aN;
+  // panah satu arah (sebelum)
+  if (m < 1) {
+    const a = 1 - m;
+    for (let i = 0; i < 2; i++) {
+      const p = pr(lt, 2 + i * .8, .7);
+      arrow(pos[i][0] + 140, pos[i][1], lerp(pos[i][0] + 140, pos[i + 1][0] - 140, p), pos[i + 1][1], C.mute, 5, 20, a * (p > 0 ? 1 : 0));
+    }
+    ctx.save(); ctx.globalAlpha *= a; ctx.setLineDash([12, 12]); ctx.strokeStyle = C.grey; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(pos[2][0] + 140, pos[2][1]); ctx.lineTo(pos[3][0] - 140, pos[3][1]); ctx.stroke(); ctx.restore();
+    cross((pos[2][0] + pos[3][0]) / 2, pos[2][1], 40, C.red, 9);
+    const q = eo(pr(lt, 4.5, .7)) * a;
+    ctx.save(); ctx.globalAlpha *= q;
+    box(980, 700, 520, 130, 20, 'rgba(239,100,97,.14)', C.red, 2);
+    wrap('BPJS awalnya tidak mengetahui jumlah peserta yang dinonaktifkan, karena datanya diurus kementerian lain.',
+      1005, 745, 470, { s: 24, w: 600, lh: 32 });
+    ctx.restore();
+  }
+  // hub & garis dua arah (sesudah)
+  if (m > 0) {
+    ctx.save(); ctx.globalAlpha *= m;
+    for (let i = 0; i < 4; i++) {
+      ctx.strokeStyle = C.teal; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(hub[0], hub[1]); ctx.lineTo(pos[i][0], pos[i][1]); ctx.stroke();
+      for (const dir of [0, 1]) {
+        const ph = ((lt * .5 + i * .25 + dir * .5) % 1);
+        const k = dir ? ph : 1 - ph;
+        ctx.beginPath(); ctx.arc(lerp(hub[0], pos[i][0], k), lerp(hub[1], pos[i][1], k), 9, 0, Math.PI * 2);
+        ctx.fillStyle = dir ? C.tealL : C.amber; ctx.fill();
+      }
+    }
+    // perisai lembaga PDP
+    const sh = eo(pr(lt, 22, 1.2));
+    if (sh > 0) {
+      ctx.save(); ctx.globalAlpha *= sh;
+      ctx.beginPath(); ctx.ellipse(hub[0], hub[1], 250 * sh + 10, 185 * sh + 10, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(245,181,68,.10)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = 4; ctx.setLineDash([16, 10]); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(hub[0], hub[1], 120, 0, Math.PI * 2); ctx.fillStyle = C.teal; ctx.fill();
+    db(hub[0], hub[1] - 25, 70, C.bg);
+    txt('Data', hub[0], hub[1] + 50, { s: 26, w: 800, c: C.bg, al: 'center' });
+    txt('terintegrasi', hub[0], hub[1] + 80, { s: 22, w: 700, c: C.bg, al: 'center' });
+    if (sh > 0) {
+      txt('LEMBAGA PDP · PENGAWAS', hub[0], hub[1] + 150, { s: 20, w: 800, c: C.amber, al: 'center', a: sh });
+    }
+    ctx.restore();
+  }
+  // simpul
+  nodes.forEach((n, i) => {
+    const [x, y] = pos[i], a = eo(pr(lt, .8 + i * .3, .5));
+    ctx.save(); ctx.globalAlpha *= a;
+    box(x - 140, y - 60, 280, 120, 22, C.card, m > .5 ? C.teal : C.line, 3);
+    ctx.beginPath(); ctx.arc(x - 90, y, 36, 0, Math.PI * 2); ctx.fillStyle = C.tealL; ctx.fill();
+    n[2](x - 90, y + 3);
+    txt(n[0], x - 40, y - 6, { s: n[0].length > 10 ? 22 : 28, w: 800 });
+    wrap(n[1], x - 40, y + 22, 170, { s: 18, w: 500, c: C.mute, lh: 22 });
+    ctx.restore();
+  });
+  ctx.restore();
+
+  // keterangan & dasar hukum (fase sesudah)
+  const ka = eo(pr(lt, 13.5, .7));
+  if (ka > 0) {
+    ctx.save(); ctx.globalAlpha *= ka;
+    box(1090, 300, 720, 64, 16, C.card2);
+    txt('Klaim BPJS ↔ Kemensos: siapa sedang cuci darah/kemoterapi', 1112, 341, { s: 22, w: 600 });
+    ctx.restore();
+  }
+  const la = eo(pr(lt, 16, .6));
+  legalLabel(110, 822, la);
+  const chips = [
+    ['Pasal 18 UU PDP', 'Perjanjian pengendali data bersama: peran, tanggung jawab, narahubung'],
+    ['Pasal 4–5 PP 101/2012', 'Koordinasi antarkementerian sebelum data PBI ditetapkan'],
+    ['Perpres 95/2018 (SPBE)', 'Prinsip keterpaduan sistem pemerintahan berbasis elektronik'],
+    ['Pasal 58 UU PDP', 'Lembaga PDP: pengawas yang belum terbentuk (per September 2026)'],
+  ];
+  chips.forEach((c, i) => chip(110 + i * 430, 842, 410, 150, c[0], c[1], i === 3 ? C.amber : C.tealL,
+    eo(pr(lt, i === 3 ? 23.5 : 16.4 + i * .8, .6))));
+}
+
+/* 6. Alur baru yang diusulkan */
+function sFlow(lt, D) {
+  header(lt, 'GAMBARAN UTUH', C.teal, 'Alur penonaktifan: sebelum dan sesudah solusi');
+  // sebelum
+  const ba = eo(pr(lt, .8, .6));
+  txt('SEBELUM', 110, 300, { s: 26, w: 800, c: C.red, a: ba });
+  const bs = ['Data DTSEN dimutakhirkan', 'Kepmensos ditetapkan', 'Status langsung nonaktif', 'Peserta baru tahu di rumah sakit'];
+  bs.forEach((s, i) => {
+    const a = eo(pr(lt, 1 + i * .5, .5)), x = 110 + i * 430;
+    ctx.save(); ctx.globalAlpha *= a;
+    box(x, 325, 380, 110, 18, i === 3 ? 'rgba(239,100,97,.2)' : C.card, i === 3 ? C.red : C.line, 2);
+    wrap(s, x + 25, 372, 330, { s: 26, w: 700, c: i === 3 ? C.red : C.white, lh: 32 });
+    if (i < 3) arrow(x + 385, 380, x + 425, 380, C.mute, 4, 14);
+    ctx.restore();
+  });
+  // sesudah
+  const aa = eo(pr(lt, 4, .6));
+  txt('SESUDAH', 110, 530, { s: 26, w: 800, c: C.tealL, a: aa });
+  const as = [
+    ['Pemutakhiran DTSEN', 'data dikumpulkan'],
+    ['DPIA + cek klaim', 'pasien katastropik dikecualikan'],
+    ['Notifikasi H-30', 'push, SMS, surat desa'],
+    ['Masa sanggah', 'perbaiki data / keberatan'],
+    ['Keputusan final', 'disampaikan resmi'],
+    ['Reaktivasi mudah', 'kanal pengaduan jelas'],
+  ];
+  const run = pr(lt, 5, 9);
+  as.forEach((s, i) => {
+    const a = eo(pr(lt, 4.4 + i * .5, .5)), x = 75 + i * 300;
+    const on = run * 6 > i;
+    ctx.save(); ctx.globalAlpha *= a;
+    box(x, 560, 270, 235, 22, on ? 'rgba(31,181,143,.18)' : C.card, on ? C.teal : C.line, 3);
+    ctx.beginPath(); ctx.arc(x + 50, 615, 30, 0, Math.PI * 2); ctx.fillStyle = on ? C.teal : C.card2; ctx.fill();
+    txt(String(i + 1), x + 50, 626, { s: 30, w: 800, c: on ? C.bg : C.mute, al: 'center' });
+    const th = wrap(s[0], x + 25, 685, 230, { s: 27, w: 800, lh: 32 });
+    wrap(s[1], x + 25, 685 + th + 8, 230, { s: 21, w: 500, c: C.mute, lh: 26 });
+    if (i < 5) arrow(x + 272, 670, x + 298, 670, on ? C.teal : C.line, 4, 12);
+    ctx.restore();
+  });
+  // keterangan perlindungan
+  const pa = eo(pr(lt, 14.5, .7));
+  ctx.save(); ctx.globalAlpha *= pa;
+  ctx.strokeStyle = C.amber; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(75, 820); ctx.lineTo(75, 840); ctx.lineTo(1265, 840); ctx.lineTo(1265, 820); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(1275, 820); ctx.lineTo(1275, 840); ctx.lineTo(1845, 840); ctx.lineTo(1845, 820); ctx.stroke();
+  txt('Perlindungan hukum PREVENTIF', 670, 890, { s: 30, w: 800, c: C.amber, al: 'center' });
+  txt('warga tahu dan dapat bersuara sebelum keputusan', 670, 930, { s: 24, w: 500, c: C.mute, al: 'center' });
+  txt('Perlindungan REPRESIF', 1560, 890, { s: 30, w: 800, c: C.tealL, al: 'center' });
+  txt('jalur pemulihan tetap tersedia', 1560, 930, { s: 24, w: 500, c: C.mute, al: 'center' });
+  ctx.restore();
+}
+
+/* 7. Tips praktis masyarakat */
+function sTips(lt, D) {
+  header(lt, 'UNTUK MASYARAKAT', C.amber, 'Tips praktis agar tidak menjadi korban');
+  const tips = [
+    ['Cek status rutin', 'Sebelum berobat, cek lewat Mobile JKN, PANDAWA 0811-8165-165, atau Care Center 165. Bantu keluarga yang tidak punya ponsel pintar.', (x, y) => magnifier(x, y, 60, C.bg)],
+    ['Segera urus jika nonaktif', 'Datangi dinas sosial atau desa/kelurahan dengan KTP, KK, dan Surat Keterangan Membutuhkan Layanan Kesehatan, sebelum batas 6 bulan.', (x, y) => refresh(x, y, 64, C.bg)],
+    ['Perbarui data DTSEN', 'Laporkan perubahan kondisi lewat desa/kelurahan, lalu cek status di laman Cek Bansos Kemensos.', (x, y) => db(x, y, 50, C.bg)],
+    ['Ketahui hak darurat', 'Rumah sakit dilarang menolak pasien dalam keadaan gawat darurat (Pasal 174 UU 17/2023).', (x, y) => hospital(x, y, 50, C.bg)],
+    ['Simpan bukti', 'Tangkapan layar status, surat penolakan, dan kuitansi berguna untuk pengaduan ke Ombudsman, SP4N-LAPOR!, atau gugatan.', (x, y) => camera(x, y, 56, C.bg)],
+    ['Waspadai penipuan', 'Reaktivasi tidak dipungut biaya. Jangan berikan kode OTP kepada pihak tidak resmi.', (x, y) => lock(x, y, 56, C.bg)],
+  ];
+  tips.forEach((tp, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    const x = 110 + col * 580, y = 270 + row * 375, w = 540, h = 345;
+    const a = eo(pr(lt, .8 + i * .35, .6));
+    const hs = 4 + i * 4;
+    const hl = Math.min(eo(pr(lt, hs, .4)), eo((hs + 4 - lt) / .4));
+    const dim = lt > 4 && lt < 28 ? (.55 + .45 * hl) : 1;
+    ctx.save(); ctx.globalAlpha *= a * dim;
+    const sc = 1 + .03 * hl;
+    ctx.translate(x + w / 2, y + h / 2); ctx.scale(sc, sc); ctx.translate(-(x + w / 2), -(y + h / 2));
+    box(x, y, w, h, 26, hl > .1 ? '#17406F' : C.card, hl > .1 ? C.amber : C.line, hl > .1 ? 4 : 2);
+    ctx.beginPath(); ctx.arc(x + 75, y + 80, 44, 0, Math.PI * 2); ctx.fillStyle = C.amber; ctx.fill();
+    tp[2](x + 75, y + 82);
+    txt(String(i + 1).padStart(2, '0'), x + w - 40, y + 70, { s: 30, w: 800, c: C.mute, al: 'right' });
+    txt(tp[0], x + 40, y + 175, { s: 34, w: 800 });
+    wrap(tp[1], x + 40, y + 222, w - 80, { s: 23, w: 500, c: C.mute, lh: 31 });
+    ctx.restore();
+  });
+}
+
+/* 8. Penutup */
+function sClose(lt, D) {
+  const l = ['Data yang akurat.', 'Informasi yang sampai.', 'Hak yang terlindungi.'];
+  const cols = [C.white, C.tealL, C.amber];
+  l.forEach((s, i) => {
+    const a = eo(pr(lt, .5 + i * .8, .8));
+    txt(s, 960, 390 + i * 110 + (1 - a) * 30, { s: 80, w: 800, c: cols[i], al: 'center', a });
+  });
+  const a = eo(pr(lt, 3.4, .8));
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.fillStyle = C.teal; ctx.fillRect(920, 690, 80, 6);
+  txt('Layanan publik digital harus memberi tahu, bukan sekadar menyimpan data.', 960, 770, { s: 32, w: 500, c: C.mute, al: 'center' });
+  txt('Kelompok 2 · Hukum Telematika Kelas E · FH Universitas Jember', 960, 860, { s: 28, w: 700, al: 'center' });
+  txt('Terima kasih', 960, 930, { s: 30, w: 800, c: C.tealL, al: 'center' });
+  ctx.restore();
+}
+
+/* ---------- jadwal adegan (detik) ---------- */
+const SCENES = [
+  { d: 9, f: sTitle, k: 'Pembuka' },
+  { d: 22, f: sProblem, k: 'Latar masalah' },
+  { d: 13, f: sMap, k: 'Peta solusi' },
+  { d: 15, f: sSol1a, k: 'Solusi 1' },
+  { d: 20, f: sSol1b, k: 'Solusi 1' },
+  { d: 34, f: sSol2, k: 'Solusi 2' },
+  { d: 34, f: sSol3, k: 'Solusi 3' },
+  { d: 22, f: sFlow, k: 'Alur usulan' },
+  { d: 30, f: sTips, k: 'Tips' },
+  { d: 10, f: sClose, k: 'Penutup' },
+];
+let acc = 0; for (const s of SCENES) { s.a = acc; acc += s.d; }
+const TOTAL = acc;
+
+function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  background(t);
+  const sc = SCENES.find(s => t >= s.a && t < s.a + s.d) || SCENES[SCENES.length - 1];
+  const lt = t - sc.a;
+  const fadeIn = sc === SCENES[0] ? 1 : eo(lt / .5);
+  const fadeOut = sc === SCENES[SCENES.length - 1] ? clamp((sc.d - lt) / 1.2) : eo((sc.d - lt) / .5);
+  ctx.save(); ctx.globalAlpha = Math.min(fadeIn, fadeOut);
+  sc.f(lt, sc.d);
+  ctx.restore();
+  // bilah kemajuan & penanda
+  if (sc !== SCENES[0] && sc !== SCENES[SCENES.length - 1]) {
+    txt('Kelompok 2 · FH Universitas Jember', W - 110, 100, { s: 20, w: 600, c: C.mute, al: 'right', a: .8 });
+  }
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = C.teal; ctx.fillRect(0, H - 8, W * (t / TOTAL), 8);
+}
+
+window.TOTAL = TOTAL;
+window.render = render;
+window.ready = document.fonts.load(`800 40px Inter`).then(() => document.fonts.load(`500 40px Inter`)).then(() => document.fonts.load(`600 40px Inter`)).then(() => document.fonts.load(`700 40px Inter`));
+
+/* pratinjau di peramban: ?t=detik untuk membekukan, tanpa parameter untuk memutar */
+const qs = new URLSearchParams(location.search);
+if (!qs.has('capture')) {
+  window.ready.then(() => {
+    if (qs.has('t')) render(parseFloat(qs.get('t')));
+    else { const st = performance.now(); const loop = () => { render(((performance.now() - st) / 1000) % TOTAL); requestAnimationFrame(loop); }; loop(); }
+  });
+}
+</script>
+</body>
+</html>
