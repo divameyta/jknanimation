@@ -720,23 +720,24 @@ function s5(lt, D) {
       ['1917–1933', 'Borneo Utara (Inggris) mengatur pengambilan telur penyu & suaka burung di Sipadan', 16.8, (x, y) => turtle(x, y, .55, lt)],
       ['1962–1963', 'Mercusuar dibangun di kedua pulau, dirawat Malaysia. Indonesia tidak memprotes.', 19.6, (x, y) => lighthouse(x, y + 50, .3, lt)],
       ['1969', 'Klaim bertabrakan dalam perundingan landas kontinen (tanggal kritis)', 23.6, (x, y) => { txt('⚡', x, y + 22, { s: 70, w: 700, al: 'center', c: C.orange }); }],
-      ['1997', 'Special Agreement di Kuala Lumpur: sengketa diserahkan ke ICJ', 26.8, (x, y) => docIcon(x, y, .6, '#FFF3D6')],
-      ['2002', 'ICJ memutus kedaulatan berada pada Malaysia', 28.3, (x, y) => gavel(x + 8, y + 8, .6)],
+      ['1997', 'Special Agreement di Kuala Lumpur: sengketa diserahkan ke ICJ', 1e9, (x, y) => docIcon(x, y, .6, '#FFF3D6')],
+      ['2002', 'ICJ memutus kedaulatan berada pada Malaysia', 1e9, (x, y) => gavel(x + 8, y + 8, .6)],
     ];
     const x0 = 170, x1 = 1750, ly = 420;
     limb(x0, ly, x1, ly, 12, '#FFFFFF');
     let cur = -1; M.forEach((m, i) => { if (lt >= m[2]) cur = i; });
     const prog = cur < 0 ? 0 : lerp(cur / 5, Math.min(1, (cur + 1) / 5), 0) ;
-    limb(x0, ly, lerp(x0, x1, eio(clamp((lt - 10.4) / 18))), ly, 12, C.red);
+    limb(x0, ly, lerp(x0, x1, .6 * eio(clamp((lt - 10.4) / 13.4))), ly, 12, C.red);
     M.forEach(([yr, ds, st, icon], i) => {
       const x = lerp(x0, x1, i / 5), on = lt >= st;
-      const a = pop(pr(lt, Math.min(st, 10.6 + i * .2), .5));
+      const a = pop(pr(lt, 10.6 + i * .2, .5));
       at(x, ly, a, () => {
         circ(0, 0, 70, on ? '#FFFFFF' : '#E3E7EE', 6);
         withA(on ? 1 : .35, () => icon(0, 0));
       });
       pill(x, ly - 110, yr, on ? C.red : '#FFFFFF', { s: 28, c: on ? '#FFFFFF' : OL });
     });
+    withA(eo(pr(lt, 24.5, .6)), () => txt('1997 & 2002: lihat penyelesaian →', 1680, 880, { s: 26, w: 600, al: 'right', c: C.sea }));
     if (cur >= 0) {
       const [yr, ds, st] = M[cur];
       const a = pop(pr(lt, st, .5));
