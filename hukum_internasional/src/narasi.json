@@ -1,39 +1,157 @@
 {
-  "_keterangan": "Narasi per adegan sesuai Panduan Video Animasi (Bagian 3). 'tts' = ejaan fonetis untuk suara; 'sub' = teks subtitle persis seperti panduan. 'durasi' = durasi adegan menurut panduan (detik).",
-  "adegan": [
-    {"nama": "Pembuka", "durasi": 10, "cue": [
-      {"tts": "Dua pulau kecil di Laut Sulawesi ini pernah diperebutkan Indonesia dan Malaysia.", "sub": "Dua pulau kecil di Laut Sulawesi ini pernah diperebutkan Indonesia dan Malaysia."},
-      {"tts": "Sejak dua ribu dua, keduanya resmi milik Malaysia. Kok bisa?", "sub": "Sejak 2002, keduanya resmi milik Malaysia. Kok bisa?"}]},
-    {"nama": "Jembatan materi", "durasi": 12, "cue": [
-      {"tts": "Hukum internasional adalah aturan bersama untuk persoalan lintas batas negara.", "sub": "Hukum internasional adalah aturan bersama untuk persoalan lintas batas negara."},
-      {"tts": "Salah satu prinsipnya, sengketa harus diselesaikan secara damai, misalnya lewat Mahkamah Internasional.", "sub": "Salah satu prinsipnya, sengketa harus diselesaikan secara damai, misalnya lewat Mahkamah Internasional."}]},
-    {"nama": "Kasus posisi", "durasi": 23, "cue": [
-      {"tts": "Sipadan dan Ligitan terletak di perbatasan bekas wilayah Belanda dan Inggris.", "sub": "Sipadan dan Ligitan terletak di perbatasan bekas wilayah Belanda dan Inggris."},
-      {"tts": "Tahun delapan belas sembilan puluh satu, Konvensi Inggris Belanda menarik garis batas empat derajat sepuluh menit lintang utara yang melintasi Pulau Sebatik.", "sub": "Tahun 1891, Konvensi Inggris–Belanda menarik garis batas 4 derajat 10 menit lintang utara yang melintasi Pulau Sebatik."},
-      {"tts": "Sejak sembilan belas tujuh belas, otoritas Inggris di Borneo Utara mengatur pengambilan telur penyu dan menjadikan Sipadan suaka burung.", "sub": "Sejak 1917, otoritas Inggris di Borneo Utara mengatur pengambilan telur penyu dan menjadikan Sipadan suaka burung."},
-      {"tts": "Pada sembilan belas enam puluh dua sampai sembilan belas enam puluh tiga, mercusuar dibangun di kedua pulau, dan Indonesia tidak memprotes.", "sub": "Pada 1962 sampai 1963, mercusuar dibangun di kedua pulau, dan Indonesia tidak memprotes."},
-      {"tts": "Tahun sembilan belas enam puluh sembilan, klaim kedua negara bertabrakan.", "sub": "Tahun 1969, klaim kedua negara bertabrakan."}]},
-    {"nama": "Para pihak", "durasi": 12, "cue": [
-      {"tts": "Para pihaknya adalah Indonesia dan Malaysia.", "sub": "Para pihaknya adalah Indonesia dan Malaysia."},
-      {"tts": "Lewat spesyal egrimen tahun sembilan belas sembilan puluh tujuh, keduanya sepakat membawa sengketa ke Mahkamah Internasional atau I C J.", "sub": "Lewat Special Agreement tahun 1997, keduanya sepakat membawa sengketa ke Mahkamah Internasional atau ICJ."},
-      {"tts": "Filipina sempat ingin ikut campur, tetapi ditolak.", "sub": "Filipina sempat ingin ikut campur, tetapi ditolak."}]},
-    {"nama": "Dalil para pihak", "durasi": 13, "cue": [
-      {"tts": "Indonesia berdalil garis delapan belas sembilan puluh satu berlanjut ke laut, sebagai penerus Sultan Bulungan, dan menunjuk patroli serta nelayannya.", "sub": "Indonesia berdalil garis 1891 berlanjut ke laut, sebagai penerus Sultan Bulungan, dan menunjuk patroli serta nelayannya."},
-      {"tts": "Malaysia berdalil garis itu hanya di darat, sebagai penerus Sultan Sulu, dan menunjuk pengaturan telur penyu, suaka burung, dan mercusuar.", "sub": "Malaysia berdalil garis itu hanya di darat, sebagai penerus Sultan Sulu, dan menunjuk pengaturan telur penyu, suaka burung, dan mercusuar."}]},
-    {"nama": "Penyelesaian dan putusan", "durasi": 25, "cue": [
-      {"tts": "I C J mempertimbangkan tiga hal.", "sub": "ICJ mempertimbangkan tiga hal."},
-      {"tts": "Pertama, Konvensi delapan belas sembilan puluh satu hanya mengatur batas di Kalimantan, bukan di laut.", "sub": "Pertama, Konvensi 1891 hanya mengatur batas di Kalimantan, bukan di laut."},
-      {"tts": "Kedua, klaim peralihan hak kedua pihak tidak terbukti.", "sub": "Kedua, klaim peralihan hak kedua pihak tidak terbukti."},
-      {"tts": "Ketiga, yang menentukan adalah penguasaan efektif: tindakan Malaysia memang sederhana, tetapi nyata, berlangsung lama, dan dilakukan sebagai penguasa.", "sub": "Ketiga, yang menentukan adalah penguasaan efektif: tindakan Malaysia memang sederhana, tetapi nyata, berlangsung lama, dan dilakukan sebagai penguasa."},
-      {"tts": "Pada tujuh belas Desember dua ribu dua, dengan suara enam belas banding satu, I C J memutus kedua pulau milik Malaysia.", "sub": "Pada 17 Desember 2002, dengan suara 16 banding 1, ICJ memutus kedua pulau milik Malaysia."},
-      {"tts": "Putusan ini final, dan Indonesia menaatinya.", "sub": "Putusan ini final, dan Indonesia menaatinya."}]},
-    {"nama": "Analisis dan pelajaran", "durasi": 17, "cue": [
-      {"tts": "Indonesia kalah bukan karena jarak, tetapi karena bukti.", "sub": "Indonesia kalah bukan karena jarak, tetapi karena bukti."},
-      {"tts": "Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan.", "sub": "Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan."},
-      {"tts": "Kasus ini juga memperlihatkan asas pakta sun servanda dan efektivite.", "sub": "Kasus ini juga memperlihatkan asas pacta sunt servanda dan effectivités."},
-      {"tts": "Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres tujuh puluh delapan tahun dua ribu lima dan undang undang empat puluh tiga tahun dua ribu delapan.", "sub": "Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres 78 Tahun 2005 dan UU 43 Tahun 2008."}]},
-    {"nama": "Penutup", "durasi": 8, "cue": [
-      {"tts": "Kedaulatan harus dibuktikan, bukan sekadar diklaim.", "sub": "Kedaulatan harus dibuktikan, bukan sekadar diklaim."},
-      {"tts": "Sken kiu ar kode dan uji pemahamanmu!", "sub": "Scan QR code dan uji pemahamanmu!"}]}
-  ]
+ "_keterangan": "Narasi per adegan sesuai Panduan Video Animasi (Bagian 3). 'tts' = ejaan fonetis untuk suara; 'sub' = teks subtitle persis seperti panduan. 'durasi' = durasi adegan menurut panduan (detik).",
+ "adegan": [
+  {
+   "nama": "Pembuka",
+   "durasi": 10,
+   "cue": [
+    {
+     "tts": "Dua pulau kecil di Laut Sulawesi ini pernah diperebutkan Indonesia dan Malaysia.",
+     "sub": "Dua pulau kecil di Laut Sulawesi ini pernah diperebutkan Indonesia dan Malaysia."
+    },
+    {
+     "tts": "Sejak dua ribu dua, keduanya resmi milik Malaysia. Kok bisa?",
+     "sub": "Sejak 2002, keduanya resmi milik Malaysia. Kok bisa?"
+    }
+   ]
+  },
+  {
+   "nama": "Jembatan materi",
+   "durasi": 12,
+   "cue": [
+    {
+     "tts": "Hukum internasional adalah aturan bersama untuk persoalan lintas batas negara.",
+     "sub": "Hukum internasional adalah aturan bersama untuk persoalan lintas batas negara."
+    },
+    {
+     "tts": "Salah satu prinsipnya, sengketa harus diselesaikan secara damai, misalnya lewat Mahkamah Internasional.",
+     "sub": "Salah satu prinsipnya, sengketa harus diselesaikan secara damai, misalnya lewat Mahkamah Internasional."
+    }
+   ]
+  },
+  {
+   "nama": "Kasus posisi",
+   "durasi": 23,
+   "cue": [
+    {
+     "tts": "Sipadan dan Ligitan terletak di perbatasan bekas wilayah Belanda dan Inggris.",
+     "sub": "Sipadan dan Ligitan terletak di perbatasan bekas wilayah Belanda dan Inggris."
+    },
+    {
+     "tts": "Tahun delapan belas sembilan puluh satu, Konvensi Inggris Belanda menarik garis batas empat derajat sepuluh menit lintang utara yang melintasi Pulau Sebatik.",
+     "sub": "Tahun 1891, Konvensi Inggris–Belanda menarik garis batas 4 derajat 10 menit lintang utara yang melintasi Pulau Sebatik."
+    },
+    {
+     "tts": "Sejak sembilan belas tujuh belas, otoritas Inggris di Borneo Utara mengatur pengambilan telur penyu dan menjadikan Sipadan suaka burung.",
+     "sub": "Sejak 1917, otoritas Inggris di Borneo Utara mengatur pengambilan telur penyu dan menjadikan Sipadan suaka burung."
+    },
+    {
+     "tts": "Pada sembilan belas enam puluh dua sampai sembilan belas enam puluh tiga, mercusuar dibangun di kedua pulau, dan Indonesia tidak memprotes.",
+     "sub": "Pada 1962 sampai 1963, mercusuar dibangun di kedua pulau, dan Indonesia tidak memprotes."
+    },
+    {
+     "tts": "Tahun sembilan belas enam puluh sembilan, klaim kedua negara bertabrakan.",
+     "sub": "Tahun 1969, klaim kedua negara bertabrakan."
+    }
+   ]
+  },
+  {
+   "nama": "Para pihak",
+   "durasi": 12,
+   "cue": [
+    {
+     "tts": "Para pihaknya adalah Indonesia dan Malaysia.",
+     "sub": "Para pihaknya adalah Indonesia dan Malaysia."
+    },
+    {
+     "tts": "Lewat spesyal egrimen tahun sembilan belas sembilan puluh tujuh, keduanya sepakat membawa sengketa ke Mahkamah Internasional atau I C J.",
+     "sub": "Lewat Special Agreement tahun 1997, keduanya sepakat membawa sengketa ke Mahkamah Internasional atau ICJ."
+    },
+    {
+     "tts": "Filipina sempat ingin ikut campur, tetapi ditolak.",
+     "sub": "Filipina sempat ingin ikut campur, tetapi ditolak."
+    }
+   ]
+  },
+  {
+   "nama": "Dalil para pihak",
+   "durasi": 13,
+   "cue": [
+    {
+     "tts": "Indonesia berdalil garis delapan belas sembilan puluh satu berlanjut ke laut, sebagai penerus Sultan Bulungan, dan menunjuk patroli serta nelayannya.",
+     "sub": "Indonesia berdalil garis 1891 berlanjut ke laut, sebagai penerus Sultan Bulungan, dan menunjuk patroli serta nelayannya."
+    },
+    {
+     "tts": "Malaysia berdalil garis itu hanya di darat, sebagai penerus Sultan Sulu, dan menunjuk pengaturan telur penyu, suaka burung, dan mercusuar.",
+     "sub": "Malaysia berdalil garis itu hanya di darat, sebagai penerus Sultan Sulu, dan menunjuk pengaturan telur penyu, suaka burung, dan mercusuar."
+    }
+   ]
+  },
+  {
+   "nama": "Penyelesaian dan putusan",
+   "durasi": 25,
+   "cue": [
+    {
+     "tts": "I C J mempertimbangkan tiga hal.",
+     "sub": "ICJ mempertimbangkan tiga hal."
+    },
+    {
+     "tts": "Pertama, Konvensi delapan belas sembilan puluh satu hanya mengatur batas di Kalimantan, bukan di laut.",
+     "sub": "Pertama, Konvensi 1891 hanya mengatur batas di Kalimantan, bukan di laut."
+    },
+    {
+     "tts": "Kedua, klaim peralihan hak kedua pihak tidak terbukti.",
+     "sub": "Kedua, klaim peralihan hak kedua pihak tidak terbukti."
+    },
+    {
+     "tts": "Ketiga, yang menentukan adalah penguasaan efektif: tindakan Malaysia memang sederhana, tetapi nyata, berlangsung lama, dan dilakukan sebagai penguasa.",
+     "sub": "Ketiga, yang menentukan adalah penguasaan efektif: tindakan Malaysia memang sederhana, tetapi nyata, berlangsung lama, dan dilakukan sebagai penguasa."
+    },
+    {
+     "tts": "Pada tujuh belas Desember dua ribu dua, dengan suara enam belas banding satu, I C J memutus kedua pulau milik Malaysia.",
+     "sub": "Pada 17 Desember 2002, dengan suara 16 banding 1, ICJ memutus kedua pulau milik Malaysia."
+    },
+    {
+     "tts": "Putusan ini final, dan Indonesia menaatinya.",
+     "sub": "Putusan ini final, dan Indonesia menaatinya."
+    }
+   ]
+  },
+  {
+   "nama": "Analisis dan pelajaran",
+   "durasi": 17,
+   "cue": [
+    {
+     "tts": "Indonesia kalah bukan karena jarak, tetapi karena bukti.",
+     "sub": "Indonesia kalah bukan karena jarak, tetapi karena bukti."
+    },
+    {
+     "tts": "Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan.",
+     "sub": "Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan."
+    },
+    {
+     "tts": "Kasus ini juga memperlihatkan asas pakta sun servanda dan efektivite.",
+     "sub": "Kasus ini juga memperlihatkan asas pacta sunt servanda dan effectivités."
+    },
+    {
+     "tts": "Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres tujuh puluh delapan tahun dua ribu lima dan undang undang empat puluh tiga tahun dua ribu delapan.",
+     "sub": "Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres 78 Tahun 2005 dan UU 43 Tahun 2008."
+    }
+   ]
+  },
+  {
+   "nama": "Penutup",
+   "durasi": 8,
+   "cue": [
+    {
+     "tts": "Kedaulatan harus dibuktikan, bukan sekadar diklaim.",
+     "sub": "Kedaulatan harus dibuktikan, bukan sekadar diklaim."
+    },
+    {
+     "tts": "Sken kiu ar kode untuk materi lengkapnya!",
+     "sub": "Scan QR code untuk materi lengkapnya!"
+    }
+   ]
+  }
+ ]
 }

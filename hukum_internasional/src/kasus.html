@@ -582,8 +582,10 @@ function a8(lt, D) {
     if (QR.complete && QR.naturalWidth) ctx.drawImage(QR, -190, -190, 380, 380);
   });
   withA(eo(pr(lt, 1.1, .4)), () => {
-    toon('Scan QR', 1290, 470, 80, C.yel); toon('untuk kuis!', 1290, 560, 64, C.blue);
-    txt('uji pemahamanmu', 1290, 615, { s: 32, w: 700, al: 'center' });
+    toon('Scan QR', 1290, 440, 80, C.yel); toon('untuk materi', 1290, 525, 60, C.blue); toon('lengkap!', 1290, 600, 60, C.red);
+    rbox(1060, 640, 460, 110, 22, 'rgba(255,255,255,.95)', 4);
+    txt('naskah induk · infografis', 1290, 683, { s: 28, w: 700, al: 'center' });
+    txt('leaflet · video animasi', 1290, 723, { s: 28, w: 700, al: 'center' });
   });
   withA(eo(pr(lt, 1.4, .4)), () => {
     rbox(260, 830, 1400, 110, 26, 'rgba(255,255,255,.95)', 5);

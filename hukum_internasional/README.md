@@ -14,7 +14,7 @@ Video ini mengikuti *Panduan Video Animasi Sipadan-Ligitan Kelompok 7*: fokus pa
 | `src/narasi.json` | Narasi 8 adegan: `sub` = teks persis panduan (subtitle), `tts` = ejaan fonetis untuk suara |
 | `src/narasi.py` | Pembuat suara (Piper TTS offline) dan jadwal adegan |
 | `src/musik_loop.py` | Musik latar sintetis bebas royalti yang menyambung mulus saat diulang |
-| `src/qr.png` | QR kuis dari kelompok (mengarah ke https://q.me-qr.com/udbutg0r) |
+| `src/qr.png` | QR ke Google Drive materi lengkap (naskah induk, infografis, leaflet, video), melalui https://q.me-qr.com/udbutg0r |
 | `src/render.js` | Perekam frame menjadi MP4 |
 | `src/fonts/` | Fredoka (OFL) dan Luckiest Guy (Apache 2.0) |
 

@@ -25,4 +25,6 @@ Durasi video: 2 menit 31 detik, diputar berulang. Narasi dan subtitle sama persi
 > Indonesia kalah bukan karena jarak, tetapi karena bukti. Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan. Kasus ini juga memperlihatkan asas pacta sunt servanda dan effectivités. Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres 78 Tahun 2005 dan UU 43 Tahun 2008.
 
 ### Adegan 8 · Penutup · 2:22 (8 dtk; panduan 8 dtk)
-> Kedaulatan harus dibuktikan, bukan sekadar diklaim. Scan QR code dan uji pemahamanmu!
+> Kedaulatan harus dibuktikan, bukan sekadar diklaim. Scan QR code untuk materi lengkapnya!
+
+*Catatan: kalimat terakhir diubah dari panduan ("Scan QR code dan uji pemahamanmu!") karena QR mengarah ke Google Drive berisi materi lengkap (naskah induk, infografis, leaflet, video), bukan ke kuis. Kuis diberikan secara manual.*
