@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kasus Sipadan-Ligitan</title>
+<style>
+  @font-face{font-family:Fredoka;font-weight:500;src:url(fonts/fredoka-latin-500-normal.woff2) format('woff2')}
+  @font-face{font-family:Fredoka;font-weight:600;src:url(fonts/fredoka-latin-600-normal.woff2) format('woff2')}
+  @font-face{font-family:Fredoka;font-weight:700;src:url(fonts/fredoka-latin-700-normal.woff2) format('woff2')}
+  @font-face{font-family:Lucky;font-weight:400;src:url(fonts/luckiest-guy-latin-400-normal.woff2) format('woff2')}
+  html,body{margin:0;padding:0;background:#4FB3F0;overflow:hidden}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+/* =========================================================================
+   Video animasi: STUDI KASUS SIPADAN-LIGITAN (Indonesia/Malaysia)
+   Kelompok 7 - PHI Kelas C - Fakultas Hukum Universitas Jember
+   Gaya: langit biru cerah berawan, not musik melayang, huruf kartun tebal
+   merah-biru-kuning, ikon ramah. Tanpa karakter/logo/kendaraan dari acara TV/film.
+   render(t) deterministik; akhir video menyambung ke awal (loop).
+   ========================================================================= */
+const W = 1920, H = 1080, TAU = Math.PI * 2;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const F = 'Fredoka, sans-serif', LK = 'Lucky, Fredoka, sans-serif';
+const OL = '#14306B';
+const C = {
+  sky1: '#3FA9EE', sky2: '#BFE6FF', red: '#E8262D', blue: '#1F4FA3', yel: '#FFCE1F', navy: OL,
+  green: '#43B649', orange: '#F7931E', sand: '#F6D79B', sea: '#2E9BD6', seaD: '#1C6FAF',
+  white: '#FFFFFF', cream: '#FFF8E7', grey: '#B8C0CC', pink: '#FF9AA2', paper: '#FFF3D6'
+};
+
+/* ---------- waktu ---------- */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const eio = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const eo = x => 1 - Math.pow(1 - clamp(x), 3);
+const pop = x => { x = clamp(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const pr = (t, a, d) => clamp((t - a) / d);
+const vis = (t, a, b = 1e9, f = .4) => Math.min(eo((t - a) / f), eo((b - t) / f));
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+/* ---------- primitif ---------- */
+function rr(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function paint(fill, lw = 5) {
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (lw) { ctx.lineWidth = lw; ctx.strokeStyle = OL; ctx.lineJoin = 'round'; ctx.stroke(); }
+}
+function rbox(x, y, w, h, r, fill, lw = 5) { rr(x, y, w, h, r); paint(fill, lw); }
+function circ(x, y, r, fill, lw = 5) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); paint(fill, lw); }
+function ell(x, y, rx, ry, fill, lw = 5) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); paint(fill, lw); }
+function limb(x1, y1, x2, y2, w, col) {
+  ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.strokeStyle = OL; ctx.lineWidth = w + 9; ctx.stroke(); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke();
+}
+function txt(s, x, y, o = {}) {
+  ctx.save(); ctx.globalAlpha *= (o.a ?? 1);
+  ctx.font = `${o.w ?? 600} ${o.s ?? 36}px ${F}`; ctx.textAlign = o.al ?? 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = o.c ?? OL; ctx.fillText(s, x, y); ctx.restore();
+}
+/* huruf kartun tebal (judul) */
+function toon(s, x, y, size, fill, o = {}) {
+  ctx.save(); ctx.globalAlpha *= (o.a ?? 1);
+  ctx.font = `${size}px ${LK}`; ctx.textAlign = o.al ?? 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  ctx.lineWidth = size * .26; ctx.strokeStyle = OL; ctx.strokeText(s, x + size * .04, y + size * .07);
+  ctx.strokeText(s, x, y);
+  ctx.lineWidth = size * .08; ctx.strokeStyle = '#FFFFFF'; ctx.strokeText(s, x, y);
+  ctx.fillStyle = fill; ctx.fillText(s, x, y);
+  ctx.restore();
+}
+/* kata berwarna-warni bergantian merah-biru-kuning */
+function toonMulti(words, x, y, size, o = {}) {
+  ctx.font = `${size}px ${LK}`;
+  const sp = size * .28, ws = words.map(w => ctx.measureText(w).width);
+  let tot = ws.reduce((a, b) => a + b, 0) + sp * (words.length - 1);
+  let cx = (o.al === 'left') ? x : x - tot / 2;
+  const cols = o.cols || [C.red, C.blue, C.yel];
+  words.forEach((w, i) => { toon(w, cx + ws[i] / 2, y + (o.wave ? Math.sin((o.t || 0) * 3 + i) * 5 : 0), size, cols[i % cols.length], { a: o.a }); cx += ws[i] + sp; });
+}
+function lines(s, maxW, size, weight, font = F) {
+  ctx.font = `${weight} ${size}px ${font}`;
+  const out = [];
+  for (const para of s.split('\n')) {
+    let cur = '';
+    for (const word of para.split(' ')) {
+      const test = cur ? cur + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && cur) { out.push(cur); cur = word; } else cur = test;
+    }
+    out.push(cur);
+  }
+  return out;
+}
+function wrap(s, x, y, maxW, o = {}) {
+  const size = o.s ?? 32, wt = o.w ?? 500, lh = o.lh ?? size * 1.25;
+  const L = lines(s, maxW, size, wt);
+  L.forEach((ln, i) => txt(ln, x, y + i * lh, { ...o, s: size, w: wt }));
+  return L.length * lh;
+}
+function withA(a, fn) { if (a <= 0) return; ctx.save(); ctx.globalAlpha *= a; fn(); ctx.restore(); }
+function at(x, y, s, fn) { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); fn(); ctx.restore(); }
+function popIn(lt, st, x, y, fn, d = .5) { withA(eo(pr(lt, st, .25)), () => at(x, y, pop(pr(lt, st, d)), fn)); }
+/* kartu bergaya undangan: bingkai biru tebal + garis putus merah */
+function card(x, y, w, h, fill = '#FFFFFF', o = {}) {
+  rbox(x + 7, y + 9, w, h, 30, 'rgba(20,48,107,.25)', 0);
+  rbox(x, y, w, h, 30, o.frame || C.blue, 6);
+  rbox(x + 12, y + 12, w - 24, h - 24, 22, fill, 4);
+  if (!o.noDash) { ctx.save(); ctx.setLineDash([18, 12]); ctx.strokeStyle = C.red; ctx.lineWidth = 4; rr(x + 24, y + 24, w - 48, h - 48, 16); ctx.stroke(); ctx.restore(); }
+}
+function pill(x, y, label, fill, o = {}) {
+  const s = o.s || 26; ctx.font = `700 ${s}px ${F}`; const w = ctx.measureText(label).width + s * 1.4;
+  const x0 = o.al === 'left' ? x : x - w / 2;
+  rbox(x0, y - s * .95, w, s * 1.7, s * .85, fill, o.lw ?? 4);
+  txt(label, x0 + w / 2, y + s * .35, { s, w: 700, al: 'center', c: o.c || OL });
+  return w;
+}
+function ribbon(x, y, w, label, fill = C.red, o = {}) {
+  const h = o.h || 86;
+  ctx.beginPath(); ctx.moveTo(x - w / 2 - 50, y - h / 2 + 18); ctx.lineTo(x - w / 2 + 6, y - h / 2 + 18); ctx.lineTo(x - w / 2 + 6, y + h / 2 + 18); ctx.lineTo(x - w / 2 - 50, y + h / 2 + 18); ctx.lineTo(x - w / 2 - 28, y + 18); ctx.closePath(); paint('#B51E24', 5);
+  ctx.beginPath(); ctx.moveTo(x + w / 2 + 50, y - h / 2 + 18); ctx.lineTo(x + w / 2 - 6, y - h / 2 + 18); ctx.lineTo(x + w / 2 - 6, y + h / 2 + 18); ctx.lineTo(x + w / 2 + 50, y + h / 2 + 18); ctx.lineTo(x + w / 2 + 28, y + 18); ctx.closePath(); paint('#B51E24', 5);
+  rbox(x - w / 2, y - h / 2, w, h, 14, fill, 6);
+  ctx.font = `${o.s || 44}px ${LK}`;
+  toon(label, x, y + (o.s || 44) * .38, o.s || 44, o.tc || C.yel);
+}
+function checkBadge(x, y, s, col = C.green) { at(x, y, s, () => { circ(0, 0, 30, col, 5); ctx.strokeStyle = '#FFF'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-13, 0); ctx.lineTo(-3, 11); ctx.lineTo(14, -11); ctx.stroke(); }); }
+function xBadge(x, y, s, col = C.red) { at(x, y, s, () => { circ(0, 0, 30, col, 5); ctx.strokeStyle = '#FFF'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-11, -11); ctx.lineTo(11, 11); ctx.moveTo(11, -11); ctx.lineTo(-11, 11); ctx.stroke(); }); }
+
+/* ---------- latar: langit, awan, not musik ---------- */
+function cloud(x, y, s, col = '#FFFFFF') {
+  at(x, y, s, () => {
+    ctx.fillStyle = 'rgba(20,48,107,.10)';
+    ctx.beginPath(); ctx.arc(-60, 22, 44, 0, TAU); ctx.arc(0, 2, 60, 0, TAU); ctx.arc(64, 20, 46, 0, TAU); ctx.fill(); ctx.fillRect(-60, 22, 124, 46);
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(-60, 12, 44, 0, TAU); ctx.arc(0, -10, 60, 0, TAU); ctx.arc(64, 10, 46, 0, TAU); ctx.fill(); ctx.fillRect(-60, 12, 124, 46);
+  });
+}
+function note(x, y, s, col, kind = 0) {
+  at(x, y, s, () => {
+    ctx.fillStyle = col; ctx.strokeStyle = OL; ctx.lineWidth = 3;
+    if (kind === 0) { ctx.beginPath(); ctx.ellipse(0, 0, 14, 10, -.4, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillRect(10, -52, 5, 52); ctx.strokeRect(10, -52, 5, 52); ctx.beginPath(); ctx.moveTo(15, -52); ctx.quadraticCurveTo(34, -40, 28, -22); ctx.lineWidth = 5; ctx.strokeStyle = col; ctx.stroke(); }
+    else { for (const dx of [0, 40]) { ctx.beginPath(); ctx.ellipse(dx, 0, 14, 10, -.4, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillRect(dx + 10, -50, 5, 50); } ctx.fillRect(10, -54, 45, 10); ctx.strokeRect(10, -54, 45, 10); }
+  });
+}
+function sky(t, o = {}) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, C.sky1); g.addColorStop(1, C.sky2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // garis paranada (seperti latar khas langit bermusik)
+  ctx.save(); ctx.globalAlpha = .25; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3;
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); for (let x = 0; x <= W; x += 40) { const y = 180 + i * 16 + Math.sin(x / 260 + t * .6) * 40; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
+  ctx.restore();
+  const cy = o.cloudY ?? 0;
+  for (let i = 0; i < 6; i++) {
+    const sp = 10 + i * 4, x = ((i * 410 + t * sp) % (W + 400)) - 200;
+    cloud(x, 140 + (i % 3) * 150 + cy, .8 + (i % 2) * .4);
+  }
+  if (!o.noNotes) for (let i = 0; i < 7; i++) {
+    const p = ((t * .08 + hash(i) ) % 1);
+    note(80 + i * 270 + Math.sin(t + i) * 30, H - p * (H + 120), .9, [C.red, C.yel, C.blue][i % 3], i % 2);
+  }
+}
+function seaBand(t, top) {
+  const s = ctx.createLinearGradient(0, top, 0, H);
+  s.addColorStop(0, C.sea); s.addColorStop(1, C.seaD);
+  ctx.fillStyle = s; ctx.fillRect(0, top, W, H - top);
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  for (let r = 0; r < 6; r++) for (let i = 0; i < 9; i++) {
+    const y = top + 40 + r * 80, x = ((i * 260 + r * 130 + t * (20 + r * 6)) % (W + 260)) - 130;
+    if (y > H) continue;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 22, y - 12, x + 44, y); ctx.quadraticCurveTo(x + 66, y + 12, x + 88, y); ctx.stroke();
+  }
+}
+
+/* ---------- ikon ramah ---------- */
+function palm(x, gy, s, t) {
+  at(x, gy, s, () => {
+    ctx.lineCap = 'round'; ctx.strokeStyle = OL; ctx.lineWidth = 26; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(14, -80, -6, -170); ctx.stroke();
+    ctx.strokeStyle = '#A0703F'; ctx.lineWidth = 17; ctx.stroke();
+    for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * .62 + Math.sin(t * 1.6) * .08; ctx.save(); ctx.translate(-6, -170); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(50, -26, 100, 12); ctx.quadraticCurveTo(50, 2, 0, 0); paint(C.green, 4); ctx.restore(); }
+  });
+}
+function lighthouse(x, gy, s, t, lit = true) {
+  at(x, gy, s, () => {
+    ctx.beginPath(); ctx.moveTo(-40, 0); ctx.lineTo(-26, -220); ctx.lineTo(26, -220); ctx.lineTo(40, 0); ctx.closePath(); paint('#FFFFFF', 5);
+    ctx.save(); ctx.clip(); ctx.fillStyle = C.red; for (let i = 0; i < 3; i++) ctx.fillRect(-50, -40 - i * 70, 100, 30); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(-40, 0); ctx.lineTo(-26, -220); ctx.lineTo(26, -220); ctx.lineTo(40, 0); ctx.closePath(); paint(null, 5);
+    rbox(-34, -270, 68, 52, 10, lit ? C.yel : '#DDD', 5);
+    ctx.beginPath(); ctx.moveTo(-40, -270); ctx.lineTo(0, -310); ctx.lineTo(40, -270); ctx.closePath(); paint(C.red, 5);
+    if (lit) { const a = Math.sin(t * 1.5) * .5; ctx.save(); ctx.globalAlpha *= .4; ctx.fillStyle = '#FFF3B0'; ctx.beginPath(); ctx.moveTo(0, -244); ctx.lineTo(320 * Math.cos(a), -304 + 64 * Math.sin(a)); ctx.lineTo(320 * Math.cos(a), -184 + 64 * Math.sin(a)); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  });
+}
+function island(x, y, w, t, o = {}) {
+  ell(x, y, w / 2, w * .13, C.sand, 5);
+  ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.ellipse(x, y + w * .1, w / 2 + 24, 10, 0, 0, TAU); ctx.fill();
+  if (o.palm !== false) palm(x - w * .15, y - w * .06, o.ps || .8, t);
+  if (o.light) lighthouse(x + w * .22, y - w * .05, o.ls || .55, t, o.lit !== false);
+  if (o.label) pill(x, y + w * .2 + 34, o.label, '#FFFFFF', { s: o.lsz || 30 });
+}
+function turtle(x, y, s, t) {
+  at(x, y, s, () => {
+    const f = Math.sin(t * 5) * .4;
+    for (const [fx, fy, d] of [[-34, -22, -1], [34, -22, 1], [-30, 24, -1], [30, 24, 1]]) { ctx.save(); ctx.translate(fx, fy); ctx.rotate(d * (fy < 0 ? -.5 : .5) + f * d); ell(d * 16, 0, 22, 10, '#8AC926', 4); ctx.restore(); }
+    circ(0, -46, 16, '#8AC926', 4); circ(-6, -50, 3, OL, 0); circ(6, -50, 3, OL, 0);
+    ell(0, 0, 40, 46, '#6A994E', 5);
+    ctx.strokeStyle = OL; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-20, -14); ctx.lineTo(20, -14); ctx.moveTo(-24, 12); ctx.lineTo(24, 12); ctx.moveTo(0, -40); ctx.lineTo(0, 40); ctx.stroke();
+  });
+}
+function bird(x, y, s, t, col = '#FFFFFF') {
+  at(x, y, s, () => { const w = Math.sin(t * 9) * 18; ctx.beginPath(); ctx.moveTo(-46, -w); ctx.quadraticCurveTo(-20, -24 - w * .3, 0, 0); ctx.quadraticCurveTo(20, -24 - w * .3, 46, -w); ctx.quadraticCurveTo(20, -8, 0, 8); ctx.quadraticCurveTo(-20, -8, -46, -w); paint(col, 4); });
+}
+function globe(x, y, s, t, o = {}) {
+  at(x, y, s, () => {
+    circ(0, 0, 105, '#4CC9F0', 6);
+    ctx.save(); ctx.beginPath(); ctx.arc(0, 0, 102, 0, TAU); ctx.clip();
+    const off = (t * 30) % 220; ctx.fillStyle = '#80ED99';
+    for (const bx of [-220, 0, 220]) { ctx.beginPath(); ctx.ellipse(bx - 50 + off, -50, 46, 32, .4, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(bx + 40 + off, 30, 34, 52, -.3, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(bx - 70 + off, 60, 26, 20, 0, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3; for (const r of [-50, 0, 50]) { ctx.beginPath(); ctx.ellipse(0, r, 104 * Math.sqrt(1 - (r / 105) ** 2), 10, 0, 0, TAU); ctx.stroke(); }
+    ctx.restore(); circ(0, 0, 105, null, 6);
+    if (o.face !== false) {
+      const bl = (t % 3.4) < .12;
+      if (bl) { ctx.strokeStyle = OL; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-44, -20); ctx.lineTo(-20, -20); ctx.moveTo(20, -20); ctx.lineTo(44, -20); ctx.stroke(); }
+      else { circ(-32, -20, 15, '#FFFFFF', 4); circ(32, -20, 15, '#FFFFFF', 4); circ(-29, -18, 7, OL, 0); circ(35, -18, 7, OL, 0); }
+      ctx.strokeStyle = OL; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 16, 26, .2 * Math.PI, .8 * Math.PI); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,120,120,.45)'; ctx.beginPath(); ctx.arc(-60, 14, 12, 0, TAU); ctx.arc(60, 14, 12, 0, TAU); ctx.fill();
+    }
+  });
+}
+function scales(x, y, s, tilt = 0) {
+  at(x, y, s, () => {
+    limb(0, 70, 0, -60, 10, '#E0B12F'); rbox(-50, 66, 100, 20, 8, '#E0B12F', 4);
+    ctx.save(); ctx.translate(0, -60); ctx.rotate(tilt); limb(-80, 0, 80, 0, 8, '#E0B12F');
+    for (const d of [-1, 1]) { ctx.strokeStyle = OL; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(d * 80, 0); ctx.lineTo(d * 80 - 26, 56); ctx.moveTo(d * 80, 0); ctx.lineTo(d * 80 + 26, 56); ctx.stroke(); ctx.beginPath(); ctx.arc(d * 80, 56, 32, 0, Math.PI); ctx.closePath(); paint(C.yel, 4); }
+    ctx.restore(); circ(0, -66, 10, C.yel, 4);
+  });
+}
+function gavel(x, y, s, ang = -.6) { at(x, y, s, () => { ctx.rotate(ang); limb(0, 0, 0, 80, 12, '#9C6644'); rbox(-44, -26, 88, 46, 12, '#B5835A', 5); rbox(-50, -22, 10, 38, 4, C.yel, 3); rbox(40, -22, 10, 38, 4, C.yel, 3); }); }
+function scroll(x, y, s, label) {
+  at(x, y, s, () => { rbox(-70, -50, 140, 100, 10, C.paper, 5); circ(-70, 0, 14, '#E9C98B', 4); circ(70, 0, 14, '#E9C98B', 4); ctx.fillStyle = C.grey; for (let i = 0; i < 3; i++) ctx.fillRect(-46, -22 + i * 18, 92, 6); if (label) txt(label, 0, 80, { s: 26, w: 700, al: 'center' }); });
+}
+function docIcon(x, y, s, label) {
+  at(x, y, s, () => {
+    ctx.beginPath(); ctx.moveTo(-60, -76); ctx.lineTo(34, -76); ctx.lineTo(60, -50); ctx.lineTo(60, 76); ctx.lineTo(-60, 76); ctx.closePath(); paint(C.paper, 5);
+    if (label) { wrap(label, -48, -40, 100, { s: 18, w: 700, lh: 21 }); }
+    ctx.fillStyle = C.grey; for (let i = 0; i < 3; i++) ctx.fillRect(-46, 18 + i * 16, 92, 6);
+    circ(30, 56, 14, C.red, 3);
+  });
+}
+function crown(x, y, s) {
+  at(x, y, s, () => { ctx.beginPath(); ctx.moveTo(-60, 30); ctx.lineTo(-60, -30); ctx.lineTo(-30, 0); ctx.lineTo(0, -44); ctx.lineTo(30, 0); ctx.lineTo(60, -30); ctx.lineTo(60, 30); ctx.closePath(); paint(C.yel, 5); for (const [cx, cc] of [[-30, C.red], [0, C.blue], [30, C.red]]) circ(cx, 14, 8, cc, 3); });
+}
+function magnifier(x, y, s) { at(x, y, s, () => { limb(30, 30, 72, 72, 16, '#9C6644'); circ(0, 0, 48, 'rgba(191,230,255,.6)', 10); }); }
+function balloon(x, y, s, t) {
+  at(x, y + Math.sin(t * 1.2) * 12, s, () => {
+    ctx.strokeStyle = OL; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-34, 60); ctx.lineTo(-20, 110); ctx.moveTo(34, 60); ctx.lineTo(20, 110); ctx.stroke();
+    rbox(-26, 108, 52, 38, 8, '#B5835A', 4);
+    ctx.beginPath(); ctx.moveTo(0, 74); ctx.bezierCurveTo(-100, 20, -90, -100, 0, -100); ctx.bezierCurveTo(90, -100, 100, 20, 0, 74); ctx.closePath();
+    ctx.save(); ctx.clip(); const cols = [C.red, C.yel, C.blue, C.yel, C.red]; for (let i = 0; i < 5; i++) { ctx.fillStyle = cols[i]; ctx.fillRect(-100 + i * 40, -110, 40, 190); } ctx.restore();
+    ctx.beginPath(); ctx.moveTo(0, 74); ctx.bezierCurveTo(-100, 20, -90, -100, 0, -100); ctx.bezierCurveTo(90, -100, 100, 20, 0, 74); ctx.closePath(); paint(null, 5);
+  });
+}
+function plane(x, y, s, ang = 0) {
+  at(x, y, s, () => { ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(40, 0); ctx.lineTo(-32, -24); ctx.lineTo(-16, 0); ctx.lineTo(-32, 24); ctx.closePath(); paint('#FFFFFF', 4); ctx.beginPath(); ctx.moveTo(40, 0); ctx.lineTo(-16, 0); ctx.lineTo(-24, 14); ctx.closePath(); paint('#DCEBFF', 3); });
+}
+function courtBld(x, gy, s, label) {
+  at(x, gy, s, () => {
+    rbox(-260, -60, 520, 60, 6, '#FFFFFF', 5);
+    ctx.beginPath(); ctx.moveTo(-290, -270); ctx.lineTo(0, -380); ctx.lineTo(290, -270); ctx.closePath(); paint(C.red, 6);
+    rbox(-280, -280, 560, 30, 6, C.yel, 5);
+    for (let i = 0; i < 6; i++) rbox(-235 + i * 88, -250, 34, 190, 6, '#FFFFFF', 4);
+    scales(0, -315, .35, 0);
+    if (label) pill(0, 50, label, C.blue, { s: 26, c: '#FFFFFF' });
+  });
+}
+function flagID(x, y, w, h, t = 0) {
+  const wv = k => Math.sin(t * 4 + k * 3) * h * .06;
+  ctx.save(); ctx.translate(x, y);
+  const top = (k) => ctx.quadraticCurveTo(w / 2, wv(.5) - 6 + k, w, wv(1) + k);
+  ctx.beginPath(); ctx.moveTo(0, wv(0)); top(0); ctx.lineTo(w, h / 2 + wv(1)); ctx.quadraticCurveTo(w / 2, h / 2 + wv(.5) - 6, 0, h / 2 + wv(0)); ctx.closePath(); paint('#E70011', 0);
+  ctx.beginPath(); ctx.moveTo(0, h / 2 + wv(0)); ctx.quadraticCurveTo(w / 2, h / 2 + wv(.5) - 6, w, h / 2 + wv(1)); ctx.lineTo(w, h + wv(1)); ctx.quadraticCurveTo(w / 2, h + wv(.5) - 6, 0, h + wv(0)); ctx.closePath(); paint('#FFFFFF', 0);
+  ctx.beginPath(); ctx.moveTo(0, wv(0)); top(0); ctx.lineTo(w, h + wv(1)); ctx.quadraticCurveTo(w / 2, h + wv(.5) - 6, 0, h + wv(0)); ctx.closePath(); paint(null, 4);
+  ctx.restore();
+}
+function flagMY(x, y, w, h) {
+  ctx.save(); ctx.translate(x, y); rr(0, 0, w, h, 4); ctx.save(); ctx.clip();
+  const n = 8; for (let i = 0; i < n; i++) { ctx.fillStyle = i % 2 ? '#FFFFFF' : '#CC0001'; ctx.fillRect(0, i * h / n, w, h / n + 1); }
+  ctx.fillStyle = '#010066'; ctx.fillRect(0, 0, w * .5, h * 4 / n);
+  const cx = w * .2, cy = h * 2 / n, r = h * .19;
+  ctx.fillStyle = '#FFCC00'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#010066'; ctx.beginPath(); ctx.arc(cx + r * .3, cy, r * .85, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#FFCC00'; ctx.beginPath(); for (let i = 0; i < 28; i++) { const a = -Math.PI / 2 + i * Math.PI / 14, q = i % 2 ? r * .35 : r * .8; ctx.lineTo(w * .36 + Math.cos(a) * q, cy + Math.sin(a) * q); } ctx.fill();
+  ctx.restore(); rr(0, 0, w, h, 4); paint(null, 4); ctx.restore();
+}
+function flagPH(x, y, w, h) {
+  ctx.save(); ctx.translate(x, y); rr(0, 0, w, h, 4); ctx.save(); ctx.clip();
+  ctx.fillStyle = '#0038A8'; ctx.fillRect(0, 0, w, h / 2); ctx.fillStyle = '#CE1126'; ctx.fillRect(0, h / 2, w, h / 2);
+  ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(h * .866, h / 2); ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#FCD116'; ctx.beginPath(); ctx.arc(h * .3, h / 2, h * .1, 0, TAU); ctx.fill();
+  for (const [sx, sy] of [[h * .07, h * .1], [h * .07, h * .9], [h * .7, h / 2]]) { ctx.beginPath(); ctx.arc(sx, sy, h * .035, 0, TAU); ctx.fill(); }
+  ctx.restore(); rr(0, 0, w, h, 4); paint(null, 4); ctx.restore();
+}
+function flagPole(x, gy, h, kind, t, s = 1) {
+  limb(x, gy, x, gy - h, 6 * s, '#DDDDDD'); circ(x, gy - h - 6 * s, 8 * s, C.yel, 3);
+  const fw = 120 * s, fh = 80 * s;
+  if (kind === 'ID') flagID(x + 3, gy - h, fw, fh, t); else if (kind === 'MY') flagMY(x + 3, gy - h, fw, fh); else flagPH(x + 3, gy - h, fw, fh);
+}
+
+/* ---------- jadwal (diisi dari jadwal.json saat render) ---------- */
+let TIM = {
+  total: 120,
+  adegan: [10, 12, 23, 12, 13, 25, 17, 8].reduce((a, d, i) => { const m = a.length ? a[a.length - 1].mulai + a[a.length - 1].dur : 0; a.push({ mulai: m, dur: d, cue: [] }); return a; }, [])
+};
+let SUBS = [];
+window.setTiming = j => { TIM = j; };
+window.setSubs = s => { SUBS = s; };
+let CUES = [];
+const Q = i => (CUES[i] ? CUES[i].t : 1e9);             // waktu mulai kalimat ke-i dalam adegan
+const QE = i => (CUES[i] ? CUES[i].t + CUES[i].dur : 1e9); // waktu selesai kalimat ke-i
+
+function header(lt, label, col = C.red) {
+  const a = pop(pr(lt, .05, .5));
+  withA(eo(pr(lt, .05, .2)), () => at(300, 82, a, () => ribbon(0, 0, 470, label, col, { s: 40, h: 76 })));
+}
+
+/* =========================================================================
+   ADEGAN
+   ========================================================================= */
+/* 1. Pembuka: langit -> kamera turun ke laut & dua pulau -> tanda tanya */
+function a1(lt, D) {
+  const cam = eio(pr(lt, .6, 2.6));
+  sky(lt, { cloudY: -cam * 260, noNotes: false });
+  const seaTop = lerp(H + 360, 620, cam);
+  seaBand(lt, seaTop);
+  const dy = seaTop - 620;
+  island(520, 760 + dy, 380, lt, { light: true, label: 'Sipadan' });
+  island(1380, 740 + dy, 320, lt, { light: true, ls: .45, ps: .7, label: 'Ligitan' });
+  turtle(960 + Math.sin(lt * .6) * 60, 930 + dy, .8, lt);
+  bird(760 + lt * 26, 360 - cam * 40, .6, lt); bird(830 + lt * 26, 400 - cam * 40, .45, lt + 1);
+  balloon(1650, 300 - cam * 60, .8, lt);
+  // tanda tanya besar
+  popIn(lt, 3.0, 960, 470, () => { ctx.rotate(Math.sin(lt * 2.5) * .06); toon('?', 0, 90, 300, C.yel); }, .6);
+  withA(eo(pr(lt, 3.6, .4)), () => at(960, 170, pop(pr(lt, 3.6, .6)), () => {
+    card(-760, -110, 1520, 220, '#FFFFFF');
+    toonMulti(['Mengapa', 'Sipadan', 'dan', 'Ligitan'], 0, -10, 70);
+    toonMulti(['kini', 'milik', 'Malaysia?'], 0, 75, 70, { cols: [C.blue, C.yel, C.red] });
+  }));
+}
+
+/* 2. Jembatan materi: globe berputar + garis penghubung, timbangan & pengadilan */
+function a2(lt, D) {
+  sky(lt);
+  const nodes = [[420, 330], [1500, 300], [380, 690], [1540, 690], [960, 200]];
+  const g = [960, 480];
+  nodes.forEach(([x, y], i) => {
+    const a = eo(pr(lt, .4 + i * .2, .4));
+    withA(a, () => {
+      ctx.save(); ctx.setLineDash([16, 12]); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.quadraticCurveTo((g[0] + x) / 2, Math.min(g[1], y) - 120, x, y); ctx.stroke(); ctx.restore();
+      const p = (lt * .35 + i * .21) % 1, mx = (g[0] + x) / 2, my = Math.min(g[1], y) - 120;
+      const px = (1 - p) ** 2 * g[0] + 2 * (1 - p) * p * mx + p * p * x, py = (1 - p) ** 2 * g[1] + 2 * (1 - p) * p * my + p * p * y;
+      plane(px, py, .7, Math.atan2(y - g[1], x - g[0]));
+      circ(x, y, 34, [C.red, C.yel, C.blue, C.green, C.orange][i], 5);
+    });
+  });
+  globe(g[0], g[1], 1.3, lt);
+  withA(eo(pr(lt, Q(0), .4)), () => at(960, 830, pop(pr(lt, Q(0), .5)), () => {
+    card(-820, -70, 1640, 140, '#FFFFFF', { noDash: true });
+    toon('Hukum Internasional', -300, 22, 52, C.red); txt('= aturan bersama lintas batas negara', 0, 18, { s: 40, w: 700 });
+  }));
+  // timbangan & gedung pengadilan
+  popIn(lt, Q(1), 300, 560, () => scales(0, 0, 1.3, Math.sin(lt * 2) * .08));
+  popIn(lt, Q(1) + .6, 1620, 640, () => courtBld(0, 0, .6, null));
+  withA(eo(pr(lt, Q(1) + 1, .4)), () => ribbon(960, 100, 980, 'Sengketa diselesaikan secara damai', C.blue, { s: 44, h: 80 }));
+}
+
+/* peta kasus (ilustrasi, tidak berskala) */
+function mapView(lt, X, Y, Wm, Hm, o = {}) {
+  ctx.save(); rr(X, Y, Wm, Hm, 30); ctx.fillStyle = '#7EC8E3'; ctx.fill(); ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 4;
+  for (let r = 0; r < 8; r++) for (let i = 0; i < 7; i++) { const y = Y + 60 + r * 95, x = X + ((i * 230 + r * 110 + lt * 14) % (Wm + 200)) - 100; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 18, y - 10, x + 36, y); ctx.quadraticCurveTo(x + 54, y + 10, x + 72, y); ctx.stroke(); }
+  const sx = Wm / 1360, sy = Hm / 780, P = (a, b) => [X + a * sx, Y + b * sy];
+  ctx.beginPath(); ctx.moveTo(...P(0, 0)); ctx.lineTo(...P(1360, 0)); ctx.lineTo(...P(1360, 170));
+  ctx.quadraticCurveTo(...P(1180, 220), ...P(1080, 200)); ctx.quadraticCurveTo(...P(960, 300), ...P(860, 250));
+  ctx.quadraticCurveTo(...P(760, 230), ...P(660, 300)); ctx.quadraticCurveTo(...P(560, 330), ...P(500, 330)); ctx.lineTo(...P(0, 330)); ctx.closePath(); paint('#FFE29A', 5);
+  ctx.beginPath(); ctx.moveTo(...P(0, 330)); ctx.lineTo(...P(470, 330)); ctx.quadraticCurveTo(...P(430, 420), ...P(470, 480));
+  ctx.quadraticCurveTo(...P(520, 560), ...P(440, 640)); ctx.quadraticCurveTo(...P(400, 720), ...P(430, 780)); ctx.lineTo(...P(0, 780)); ctx.closePath(); paint('#B8E59A', 5);
+  ell(...P(545, 335), 70 * sx, 26 * sy, '#B8E59A', 5);
+  ctx.restore(); rr(X, Y, Wm, Hm, 30); paint(null, 6); ctx.restore();
+  const [lx0, ly] = P(10, 335), [lx1] = P(612, 335);
+  if (o.line > 0) withA(1, () => {
+    ctx.save(); ctx.strokeStyle = C.red; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(lx0, ly); ctx.lineTo(lerp(lx0, lx1, o.line), ly); ctx.stroke(); ctx.restore();
+    if (o.line >= 1) { circ(lx1, ly, 10, C.red, 3); pill(lx0 + 240 * sx, ly - 36, '4°10′ LU · berhenti di Sebatik', '#FFFFFF', { s: 21 }); }
+  });
+  const pulse = 1 + Math.sin(lt * 4) * .12;
+  for (const [nm, a, b] of [['Sipadan', 860, 375], ['Ligitan', 1110, 353]]) {
+    const [px, py] = P(a, b);
+    ctx.save(); ctx.globalAlpha *= .35; circ(px, py, 30 * pulse, C.red, 0); ctx.restore();
+    circ(px, py, 14, C.yel, 5);
+    if (o.lights) lighthouse(px + 4, py - 6, .22, lt, true);
+    pill(px, py + 52, nm, '#FFFFFF', { s: 24 });
+  }
+  const [lsx, lsy] = P(1000, 660); txt('Laut Sulawesi', lsx, lsy, { s: 36, w: 700, c: '#FFFFFF', al: 'center' });
+  const [sbx, sby] = P(545, 400); txt('Sebatik', sbx, sby, { s: 20, w: 700, al: 'center' });
+  const [n1x, n1y] = P(40, 60); txt('Borneo Utara · bekas wilayah Inggris', n1x, n1y, { s: 26, w: 700 });
+  const [n2x, n2y] = P(40, 745); txt('Kalimantan · bekas wilayah Belanda', n2x, n2y, { s: 26, w: 700 });
+  const [ix, iy] = P(1340, 765); txt('ilustrasi, tidak berskala', ix, iy, { s: 18, w: 600, al: 'right', c: '#FFFFFF' });
+}
+
+/* 3. Kasus posisi */
+function a3(lt, D) {
+  sky(lt, { noNotes: true });
+  header(lt, 'Kasus Posisi');
+  mapView(lt, 60, 150, 1120, 670, { line: eo(pr(lt, Q(1) + .5, 2.2)), lights: lt > Q(3) + .4 });
+  withA(eo(pr(lt, Q(0) + .6, .4)), () => { rbox(90, 840, 1060, 60, 30, '#FFFFFF', 4); txt('Dua pulau kecil tak berpenghuni di Laut Sulawesi, lepas pantai timur laut Kalimantan', 620, 880, { s: 24, w: 700, al: 'center' }); });
+  const T = [
+    ['1891', 'Konvensi Inggris–Belanda', Q(1), (x, y) => scroll(x, y, .55)],
+    ['1917–1933', 'telur penyu & suaka burung', Q(2), (x, y) => { turtle(x - 22, y + 6, .5, lt); bird(x + 30, y - 18, .55, lt, '#FFFFFF'); }],
+    ['1962–1963', 'mercusuar (tanpa protes RI)', Q(3), (x, y) => lighthouse(x, y + 52, .3, lt, true)],
+    ['1969', 'tanggal kritis', Q(4), (x, y) => { toon('!', x - 18, y + 30, 70, C.red); toon('!', x + 18, y + 30, 70, C.yel); }],
+  ];
+  // garis waktu vertikal di kanan
+  limb(1290, 230, 1290, 860, 12, '#FFFFFF');
+  const tp = clamp((lt - Q(1)) / Math.max(1, Q(4) + 1 - Q(1)));
+  if (lt > Q(1)) limb(1290, 230, 1290, lerp(230, 860, eio(tp)), 12, C.red);
+  T.forEach(([yr, ds, st, icon], i) => {
+    const y = 230 + i * 210;
+    popIn(lt, st, 1290, y, () => { circ(0, 0, 62, '#FFFFFF', 6); icon(0, 0); });
+    withA(eo(pr(lt, st + .2, .4)), () => {
+      ctx.save(); ctx.translate((1 - eo(pr(lt, st + .2, .5))) * 60, 0);
+      rbox(1370, y - 70, 500, 140, 24, lt < (T[i + 1] ? T[i + 1][2] : 1e9) ? '#FFFFFF' : '#EAF6FF', 5);
+      toon(yr, 1395, y - 8, 52, [C.red, C.blue, C.orange, C.red][i], { al: 'left' });
+      txt(ds, 1395, y + 46, { s: 28, w: 600 });
+      ctx.restore();
+    });
+  });
+}
+
+/* 4. Para pihak */
+function a4(lt, D) {
+  sky(lt);
+  header(lt, 'Para Pihak');
+  ctx.fillStyle = '#9ED77F'; ctx.fillRect(0, 860, W, H - 860); ctx.fillStyle = '#86C46A'; ctx.fillRect(0, 860, W, 10);
+  courtBld(1500, 860, 1.0, 'Mahkamah Internasional (ICJ)');
+  const p = eio(pr(lt, .4, Math.max(2.5, Q(1) + 2 - .4)));
+  const xi = lerp(140, 820, p), xm = lerp(330, 1010, p);
+  flagPole(xi, 860, 330, 'ID', lt, 1.1); flagPole(xm, 860, 330, 'MY', lt, 1.1);
+  withA(eo(pr(lt, .3, .4)), () => { pill(xi + 70, 900, 'Indonesia', '#FFFFFF', { s: 28 }); pill(xm + 70, 900, 'Malaysia', '#FFFFFF', { s: 28 }); });
+  withA(eo(pr(lt, Q(0) + .8, .4)), () => ribbon(700, 230, 820, 'Diajukan bersama', C.blue, { s: 40, h: 74 }));
+  withA(eo(pr(lt, Q(0) + 1.1, .4)), () => txt('tidak ada penggugat & tergugat', 700, 330, { s: 32, w: 700, al: 'center' }));
+  popIn(lt, Q(1), 1500, 260, () => { ctx.rotate(Math.sin(lt * 2) * .05); docIcon(0, 0, 1.1, 'Special Agreement 1997'); });
+  popIn(lt, Q(1) + 1.2, 1780, 430, () => gavel(0, 0, 1.1, -.6 + Math.sin(lt * 6) * .2));
+  // Filipina: muncul lalu diberi tanda silang
+  const pa = eo(pr(lt, Q(2), .4));
+  withA(pa, () => {
+    flagPole(270, 760, 240, 'PH', lt, .8);
+    if (lt > Q(2) + .9) xBadge(330, 520, pop(pr(lt, Q(2) + .9, .4)) * .9);
+    pill(330, 800, 'Intervensi Filipina ditolak (2001)', '#FFFFFF', { s: 24 });
+  });
+}
+
+/* 5. Dalil para pihak: layar terbagi dua */
+function a5(lt, D) {
+  sky(lt, { noNotes: true });
+  header(lt, 'Dalil Para Pihak');
+  rbox(60, 160, 880, 800, 30, 'rgba(255,255,255,.92)', 6); rbox(980, 160, 880, 800, 30, 'rgba(255,255,255,.92)', 6);
+  flagID(110, 190, 120, 80, lt); toon('Indonesia', 520, 255, 60, C.red);
+  flagMY(1030, 190, 120, 80); toon('Malaysia', 1440, 255, 60, C.blue);
+  const R = [
+    ['Perjanjian', (x, y) => scroll(x, y, .6), 'garis 1891 berlanjut ke laut', 'garis hanya di darat'],
+    ['Peralihan hak', (x, y) => crown(x, y, .9), 'penerus Sultan Bulungan', 'penerus Sultan Sulu'],
+    ['Penguasaan efektif', (x, y) => { turtle(x - 24, y, .45, lt); lighthouse(x + 30, y + 40, .2, lt, true); }, 'patroli & nelayan', 'telur penyu, suaka burung, mercusuar'],
+  ];
+  const ds = QE(0) - Q(0), dm = QE(1) - Q(1);
+  R.forEach(([k, icon, a_, b_], i) => {
+    const y = 380 + i * 200, si = Q(0) + ds * i / 3, sm = Q(1) + dm * i / 3;
+    withA(eo(pr(lt, si, .3)), () => { rbox(80, y - 70, 840, 160, 24, ['#FFE9E9', '#FFF6D6', '#E6F6E6'][i], 4); });
+    popIn(lt, si, 170, y + 10, () => { circ(0, 0, 62, '#FFFFFF', 5); icon(0, 0); });
+    withA(eo(pr(lt, si + .1, .3)), () => { txt(k.toUpperCase(), 260, y - 22, { s: 24, w: 700, c: C.blue }); wrap(a_, 260, y + 26, 640, { s: 36, w: 700, lh: 40 }); });
+    withA(eo(pr(lt, sm, .3)), () => { rbox(1000, y - 70, 840, 160, 24, ['#FFE9E9', '#FFF6D6', '#E6F6E6'][i], 4); });
+    popIn(lt, sm, 1090, y + 10, () => { circ(0, 0, 62, '#FFFFFF', 5); icon(0, 0); });
+    withA(eo(pr(lt, sm + .1, .3)), () => { txt(k.toUpperCase(), 1180, y - 22, { s: 24, w: 700, c: C.blue }); wrap(b_, 1180, y + 26, 640, { s: 36, w: 700, lh: 40 }); });
+  });
+}
+
+/* 6. Penyelesaian dan putusan */
+function a6(lt, D) {
+  sky(lt, { noNotes: true });
+  header(lt, 'Penyelesaian');
+  // jalur penyelesaian
+  withA(eo(pr(lt, .2, .4)), () => {
+    rbox(620, 40, 1240, 84, 42, '#FFFFFF', 5);
+    txt('Perundingan bilateral gagal', 700, 96, { s: 30, w: 700, c: C.red });
+    txt('→  ICJ (Pasal 36 ayat (1) Statuta ICJ)', 1130, 96, { s: 30, w: 700, c: C.blue });
+  });
+  // ruang sidang sederhana
+  rbox(60, 160, 1100, 230, 30, '#FFFFFF', 6);
+  rbox(110, 280, 1000, 90, 14, '#B5835A', 5);
+  for (let i = 0; i < 17; i++) { const x = 150 + i * 57; circ(x, 250, 20, ['#F1C27D', '#E0A877', '#C68B59'][i % 3], 4); rbox(x - 22, 268, 44, 26, 10, OL, 0); }
+  txt('Mahkamah Internasional (ICJ)', 610, 205, { s: 30, w: 700, al: 'center', c: C.blue });
+  const K = [
+    ['Konvensi 1891 tidak berlaku untuk laut', 'hanya mengatur batas di Kalimantan', Q(1), false, 'tafsir perjanjian'],
+    ['Peralihan hak kedua pihak tidak terbukti', 'kontrak Belanda–Bulungan tak mengikat Inggris', Q(2), false, 'pacta tertiis'],
+    ['Penguasaan efektif (effectivités) menentukan', 'sederhana, nyata, lama, sebagai penguasa', Q(3), true, 'effectivités'],
+  ];
+  K.forEach(([h, d, st, ok, tag], i) => {
+    const y = 420 + i * 150;
+    withA(eo(pr(lt, st, .3)), () => {
+      ctx.save(); const s = pop(pr(lt, st, .5)); ctx.translate(610, y + 65); ctx.scale(s, s); ctx.translate(-610, -(y + 65));
+      rbox(60, y, 1100, 130, 24, ok ? '#E6F6E6' : '#FFFFFF', 5);
+      toon(String(i + 1), 115, y + 88, 60, [C.red, C.blue, C.yel][i]);
+      txt(h, 170, y + 58, { s: 32, w: 700, c: ok ? '#1E7B34' : OL });
+      txt(d, 170, y + 100, { s: 24, w: 500 });
+      pill(1080, y + 30, tag, C.yel, { s: 18 });
+      (ok ? checkBadge : xBadge)(1110, y + 88, .7);
+      ctx.restore();
+    });
+  });
+  // putusan: palu diketuk + papan skor
+  const g = pr(lt, Q(4), .6);
+  if (lt > Q(4) - .1) {
+    const ang = g < .5 ? lerp(-.6, -1.5, g * 2) : lerp(-1.5, -.3, (g - .5) * 2);
+    gavel(1500, 260, 1.4, ang); rbox(1390, 320, 220, 34, 10, '#9C6644', 4);
+    if (g > .75 && g < 1) { ctx.save(); ctx.strokeStyle = C.yel; ctx.lineWidth = 7; for (let i = 0; i < 7; i++) { const a = i * TAU / 7; ctx.beginPath(); ctx.moveTo(1500 + Math.cos(a) * 70, 330 + Math.sin(a) * 36); ctx.lineTo(1500 + Math.cos(a) * 120, 330 + Math.sin(a) * 60); ctx.stroke(); } ctx.restore(); }
+  }
+  withA(eo(pr(lt, Q(4) + .5, .3)), () => at(1520, 640, pop(pr(lt, Q(4) + .5, .6)), () => {
+    card(-330, -280, 660, 560, '#FFFFFF');
+    toon('17 Desember 2002', 0, -190, 46, C.blue);
+    rbox(-250, -150, 500, 150, 24, OL, 0);
+    toon('16–1', 0, -40, 120, C.yel);
+    flagMY(-250, 40, 120, 80);
+    txt('Sipadan & Ligitan', -110, 75, { s: 34, w: 700 }); txt('milik Malaysia', -110, 115, { s: 34, w: 700, c: C.red });
+    withA(eo(pr(lt, Q(5), .4)), () => { rbox(-280, 150, 560, 64, 32, C.green, 4); txt('Final & mengikat (Pasal 60) · ditaati RI', 0, 192, { s: 24, w: 700, al: 'center', c: '#FFFFFF' }); });
+  }));
+  withA(eo(pr(lt, Q(4) + 1, .4)), () => { txt('Sovereignty over Pulau Ligitan and Pulau Sipadan (Indonesia/Malaysia), I.C.J. Reports 2002, p. 625', 610, 895, { s: 21, w: 600, al: 'center', c: OL }); });
+}
+
+/* 7. Analisis dan pelajaran */
+function a7(lt, D) {
+  sky(lt);
+  header(lt, 'Analisis & Pelajaran', C.blue);
+  // kaca pembesar di atas dokumen
+  popIn(lt, Q(0), 300, 360, () => { docIcon(0, 0, 1.3, 'Bukti'); magnifier(40 + Math.sin(lt * 2) * 20, -10, 1.2); });
+  withA(eo(pr(lt, Q(0) + .3, .4)), () => { rbox(470, 240, 620, 120, 24, '#FFFFFF', 5); toon('Kalah karena bukti,', 780, 300, 44, C.red); toon('bukan jarak', 780, 348, 40, C.blue); });
+  // ikon "diam" dekat mercusuar
+  popIn(lt, Q(1), 300, 760, () => {
+    lighthouse(-60, 120, .55, lt, true);
+    rbox(30, -110, 170, 100, 30, '#FFFFFF', 5); ctx.strokeStyle = OL; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(70, -60); ctx.lineTo(160, -60); ctx.stroke();
+    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(78 + i * 18, -70); ctx.lineTo(78 + i * 18, -50); ctx.stroke(); }
+  });
+  withA(eo(pr(lt, Q(1) + .3, .4)), () => { rbox(470, 640, 620, 120, 24, '#FFFFFF', 5); toon('Diam = dianggap setuju', 780, 700, 42, C.red); txt('(acquiescence)', 780, 742, { s: 28, w: 700, al: 'center', c: C.blue }); });
+  // lencana asas & kaitan materi
+  const B = [['pacta sunt servanda', C.red], ['effectivités', C.blue], ['acquiescence', C.orange]];
+  B.forEach(([b, col], i) => popIn(lt, Q(2) + i * .45, 1450, 230 + i * 110, () => { rbox(-260, -42, 520, 84, 42, col, 5); txt(b, 0, 14, { s: 38, w: 700, al: 'center', c: '#FFFFFF' }); }));
+  withA(eo(pr(lt, Q(2) + 1.5, .4)), () => {
+    txt('Sumber: perjanjian & putusan hakim · Fungsi: menyelesaikan sengketa', 1450, 520, { s: 22, w: 700, al: 'center', c: OL });
+  });
+  // pulau terluar Indonesia (bukan Sipadan/Ligitan)
+  withA(eo(pr(lt, Q(3), .4)), () => {
+    ctx.save(); rr(1160, 560, 700, 330, 28); ctx.clip(); ctx.fillStyle = C.sea; ctx.fillRect(1160, 560, 700, 330); ctx.restore();
+    rr(1160, 560, 700, 330, 28); paint(null, 6);
+    island(1360, 820, 260, lt, { light: false, ps: .6 });
+    flagPole(1420, 800, 190, 'ID', lt, .8);
+    pill(1360, 595, 'Pulau terluar Indonesia: hadir & tercatat', '#FFFFFF', { s: 20 });
+    rbox(1530, 640, 310, 160, 20, '#FFFFFF', 4);
+    txt('Perpres 78/2005', 1685, 690, { s: 28, w: 700, al: 'center', c: C.red }); txt('UU 43/2008', 1685, 732, { s: 28, w: 700, al: 'center', c: C.blue });
+    txt('protes tepat waktu!', 1685, 776, { s: 20, w: 700, al: 'center' });
+  });
+}
+
+/* 8. Penutup + QR, lalu transisi awan ke adegan 1 */
+const QR = new Image(); QR.src = 'qr.png';
+function a8(lt, D) {
+  sky(lt);
+  balloon(1760, 300, .7, lt); plane(180 + lt * 40, 260, .9, .1);
+  withA(eo(pr(lt, .1, .3)), () => at(960, 150, pop(pr(lt, .1, .6)), () => ribbon(0, 0, 1500, 'Kedaulatan harus dibuktikan, bukan sekadar diklaim!', C.red, { s: 46, h: 96 })));
+  popIn(lt, .8, 760, 560, () => {
+    rbox(-230, -230, 460, 460, 30, '#FFFFFF', 7);
+    if (QR.complete && QR.naturalWidth) ctx.drawImage(QR, -190, -190, 380, 380);
+  });
+  withA(eo(pr(lt, 1.1, .4)), () => {
+    toon('Scan QR', 1290, 470, 80, C.yel); toon('untuk kuis!', 1290, 560, 64, C.blue);
+    txt('uji pemahamanmu', 1290, 615, { s: 32, w: 700, al: 'center' });
+  });
+  withA(eo(pr(lt, 1.4, .4)), () => {
+    rbox(260, 830, 1400, 110, 26, 'rgba(255,255,255,.95)', 5);
+    txt('Kelompok 7 · Pengantar Hukum Indonesia Kelas C · Fakultas Hukum Universitas Jember', 960, 873, { s: 26, w: 700, al: 'center', c: C.blue });
+    txt('Sumber: I.C.J. Reports 2002, p. 625 · Statuta ICJ · Piagam PBB', 960, 915, { s: 24, w: 600, al: 'center' });
+  });
+}
+/* dinding awan untuk menyambung akhir -> awal */
+function cloudWall(k) {
+  // k: 0 = belum masuk, 1 = menutup penuh
+  const x0 = lerp(W + 200, -200, k);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(x0 + 140, 0, W + 400, H);
+  for (let i = 0; i < 8; i++) { const y = i * 150 + 20; ctx.beginPath(); ctx.arc(x0 + 120, y, 120 + (i % 2) * 40, 0, TAU); ctx.fill(); }
+}
+
+/* ---------- jadwal & render ---------- */
+const FN = [a1, a2, a3, a4, a5, a6, a7, a8];
+const XFER = 1.6; // detik terakhir: awan menyapu, lalu terbuka ke adegan 1
+
+function subtitle(t) {
+  const s = SUBS.find(x => t >= x[0] && t < x[1]);
+  if (!s) return;
+  const a = Math.min(eo((t - s[0]) / .15), eo((s[1] - t) / .15));
+  withA(a, () => {
+    const L = lines(s[2], 1640, 36, 600);
+    const h = L.length * 46 + 26;
+    let w = 0; ctx.font = `600 36px ${F}`; L.forEach(l => w = Math.max(w, ctx.measureText(l).width));
+    rr(960 - w / 2 - 30, 1060 - h, w + 60, h, 22); ctx.fillStyle = 'rgba(20,48,107,.9)'; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = C.yel; ctx.stroke();
+    L.forEach((l, i) => txt(l, 960, 1060 - h + 13 + 36 + i * 46 - 4, { s: 36, w: 600, c: '#FFFFFF', al: 'center' }));
+  });
+}
+function drawScene(i, lt) { CUES = TIM.adegan[i].cue || []; ctx.save(); FN[i](lt, TIM.adegan[i].dur); ctx.restore(); }
+
+function render(t) {
+  const T = TIM.total;
+  t = ((t % T) + T) % T;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  ctx.fillStyle = C.sky1; ctx.fillRect(0, 0, W, H);
+  let i = TIM.adegan.findIndex(a => t >= a.mulai && t < a.mulai + a.dur); if (i < 0) i = 7;
+  const A = TIM.adegan[i], lt = t - A.mulai;
+  const last = i === 7;
+  if (last && lt > A.dur - XFER) {
+    const k = (lt - (A.dur - XFER)) / XFER;
+    if (k < .5) { drawScene(7, lt); cloudWall(eio(k * 2)); }
+    else { drawScene(0, 0); ctx.save(); ctx.translate(-lerp(0, W + 600, eio((k - .5) * 2)), 0); cloudWall(1); ctx.restore(); }
+  } else {
+    drawScene(i, lt);
+    // transisi antaradegan: awan berpendar singkat
+    if (i > 0 && lt < .4) { ctx.save(); ctx.globalAlpha = 1 - eo(lt / .4); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  }
+  subtitle(t);
+}
+
+window.render = render;
+Object.defineProperty(window, 'TOTAL', { get: () => TIM.total });
+window.ready = Promise.all([...[500, 600, 700].map(w => document.fonts.load(`${w} 40px Fredoka`)), document.fonts.load('40px Lucky'),
+  new Promise(r => { if (QR.complete) r(); else { QR.onload = r; QR.onerror = r; } })]);
+const qs = new URLSearchParams(location.search);
+if (!qs.has('capture')) {
+  window.ready.then(() => {
+    if (qs.has('t')) render(parseFloat(qs.get('t')));
+    else { const st = performance.now(); const loop = () => { render(((performance.now() - st) / 1000) % TIM.total); requestAnimationFrame(loop); }; loop(); }
+  });
+}
+</script>
+</body>
+</html>

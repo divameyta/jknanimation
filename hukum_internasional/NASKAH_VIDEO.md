@@ -1,39 +1,28 @@
-# Naskah Video: Hukum Internasional & Kasus Sipadan-Ligitan
+# Naskah Video: Studi Kasus Sipadan-Ligitan
 
-**Kelompok 7 · Kelas C · Fakultas Hukum Universitas Jember**
-Durasi 2 menit 54 detik, diputar berulang. Teks di bawah sama dengan narasi suara dan subtitle di video.
+**Kelompok 7 · Pengantar Hukum Indonesia Kelas C · FH Universitas Jember**
+Durasi video: 2 menit 31 detik, diputar berulang. Narasi dan subtitle sama persis dengan Bagian 3 panduan.
 
-### 0:00 · Pembuka
-> Mengapa Pulau Sipadan dan Ligitan kini milik Malaysia? Mari kita pahami lewat hukum internasional.
+### Adegan 1 · Pembuka · 0:00 (10 dtk; panduan 10 dtk)
+> Dua pulau kecil di Laut Sulawesi ini pernah diperebutkan Indonesia dan Malaysia. Sejak 2002, keduanya resmi milik Malaysia. Kok bisa?
 
-### 0:09 · Definisi & ruang lingkup
-> Hukum internasional adalah aturan bersama untuk persoalan yang melintasi batas negara.
-> Subjeknya beragam: negara, organisasi internasional, Takhta Suci, ICRC, individu, hingga kelompok pemberontak.
-> Cabangnya antara lain hukum laut, udara, HAM, humaniter, lingkungan, dan ekonomi internasional.
+### Adegan 2 · Jembatan materi · 0:10 (12 dtk; panduan 12 dtk)
+> Hukum internasional adalah aturan bersama untuk persoalan lintas batas negara. Salah satu prinsipnya, sengketa harus diselesaikan secara damai, misalnya lewat Mahkamah Internasional.
 
-*Di layar juga tampil: "Berbeda dengan hukum perdata internasional, yang mengatur perkara perdata berunsur asing."*
+### Adegan 3 · Kasus posisi · 0:22 (34 dtk; panduan 23 dtk)
+> Sipadan dan Ligitan terletak di perbatasan bekas wilayah Belanda dan Inggris. Tahun 1891, Konvensi Inggris–Belanda menarik garis batas 4 derajat 10 menit lintang utara yang melintasi Pulau Sebatik. Sejak 1917, otoritas Inggris di Borneo Utara mengatur pengambilan telur penyu dan menjadikan Sipadan suaka burung. Pada 1962 sampai 1963, mercusuar dibangun di kedua pulau, dan Indonesia tidak memprotes. Tahun 1969, klaim kedua negara bertabrakan.
 
-### 0:31 · Prinsip & asas
-> Bedakan dulu. Prinsip mengatur sikap antarnegara: kedaulatan, kesetaraan, non-intervensi, dan penyelesaian sengketa secara damai.
-> Asas menjadi dasar mengikatnya norma. Misalnya *pacta sunt servanda*, perjanjian wajib ditaati dengan itikad baik. Lalu *rebus sic stantibus*, *jus cogens*, dan *effectivités*.
+### Adegan 4 · Para pihak · 0:55 (15 dtk; panduan 12 dtk)
+> Para pihaknya adalah Indonesia dan Malaysia. Lewat Special Agreement tahun 1997, keduanya sepakat membawa sengketa ke Mahkamah Internasional atau ICJ. Filipina sempat ingin ikut campur, tetapi ditolak.
 
-*Kartu di layar: Pacta sunt servanda · Pacta tertiis · Rebus sic stantibus · Jus cogens · Reciprocity & courtoisie · Effectivités.*
+### Adegan 5 · Dalil para pihak · 1:10 (18 dtk; panduan 13 dtk)
+> Indonesia berdalil garis 1891 berlanjut ke laut, sebagai penerus Sultan Bulungan, dan menunjuk patroli serta nelayannya. Malaysia berdalil garis itu hanya di darat, sebagai penerus Sultan Sulu, dan menunjuk pengaturan telur penyu, suaka burung, dan mercusuar.
 
-### 0:55 · Tujuan & fungsi
-> Tujuannya: perdamaian, ketertiban, keadilan, dan kerja sama antarbangsa.
-> Fungsinya: mengatur hubungan, melindungi hak asasi, menyelesaikan sengketa, dan menjadi kerangka kerja sama global.
+### Adegan 6 · Penyelesaian dan putusan · 1:28 (32 dtk; panduan 25 dtk)
+> ICJ mempertimbangkan tiga hal. Pertama, Konvensi 1891 hanya mengatur batas di Kalimantan, bukan di laut. Kedua, klaim peralihan hak kedua pihak tidak terbukti. Ketiga, yang menentukan adalah penguasaan efektif: tindakan Malaysia memang sederhana, tetapi nyata, berlangsung lama, dan dilakukan sebagai penguasa. Pada 17 Desember 2002, dengan suara 16 banding 1, ICJ memutus kedua pulau milik Malaysia. Putusan ini final, dan Indonesia menaatinya.
 
-### 1:11 · Sumber hukum
-> Sumber hukumnya diatur Pasal 38 ayat (1) Statuta Mahkamah Internasional. Sumber utamanya perjanjian internasional, kebiasaan internasional, dan prinsip hukum umum, yang kedudukannya setara. Putusan pengadilan dan pendapat para ahli menjadi sumber tambahan.
+### Adegan 7 · Analisis dan pelajaran · 2:00 (22 dtk; panduan 17 dtk)
+> Indonesia kalah bukan karena jarak, tetapi karena bukti. Sikap diam saat mercusuar dibangun dianggap sebagai persetujuan. Kasus ini juga memperlihatkan asas pacta sunt servanda dan effectivités. Setelahnya, pemerintah memperkuat pengelolaan pulau terluar lewat Perpres 78 Tahun 2005 dan UU 43 Tahun 2008.
 
-### 1:31 · Kasus Sipadan-Ligitan
-> Kini kasusnya. Sipadan dan Ligitan adalah dua pulau kecil di Laut Sulawesi, di titik temu bekas wilayah Belanda dan Inggris.
-> Konvensi Inggris–Belanda 1891 menetapkan batas di garis 4°10′ Lintang Utara. Inggris lalu mengatur telur penyu dan suaka burung. Mercusuar dibangun tanpa protes Indonesia. Pada 1969, klaim kedua negara bertabrakan.
-> Lewat Special Agreement 1997, Indonesia dan Malaysia bersama-sama membawa sengketa ini ke Mahkamah Internasional. Indonesia bersandar pada konvensi, Malaysia pada penguasaan efektif.
-> Mahkamah menilai konvensi itu tidak berlaku untuk laut, dan klaim peralihan hak kedua pihak tidak terbukti.
-> Penentunya adalah *effectivités*: tindakan nyata Malaysia sebagai penguasa, tanpa protes Indonesia. 17 Desember 2002, 16 banding 1: kedua pulau milik Malaysia.
-
-### 2:38 · Penutup
-> Putusan itu final dan ditaati Indonesia. Pelajarannya: kedaulatan harus dibuktikan dengan kehadiran nyata negara. Pindai kode QR kami untuk materi lengkap dan kuis!
-
-*Di layar: Perpres 78/2005 · UU 43/2008 · daftar sumber · identitas kelompok. Video lalu melebur kembali ke adegan pembuka.*
+### Adegan 8 · Penutup · 2:22 (8 dtk; panduan 8 dtk)
+> Kedaulatan harus dibuktikan, bukan sekadar diklaim. Scan QR code dan uji pemahamanmu!
